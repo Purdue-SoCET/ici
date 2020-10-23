@@ -9,7 +9,9 @@
   
 #define PORT 6969 
 #define MAXLINE 1024 
-  
+ 
+//EXAMPLE FILE COPIED FROM INTERNET
+ 
 int main() 
 { 
     int sock_fd; 
