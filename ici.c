@@ -52,12 +52,16 @@ void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
 void node_rx(void* arguments);
-unsigned int bit_read_index(unsigned int num, int index);
-unsigned int bit_write_index(unsigned int num, int index);
+void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet);
+void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args);
+void fabric_init(Node_Creation_Args** nodes);
+unsigned char bit_read_index(unsigned char num, char index);
+void bit_write_index(unsigned char* num, char index);
 
 int main()
 {
-    Node_Creation_Args node_creation_arguments[10];
+    Node_Creation_Args* node_creation_arguments;
+    node_creation_arguments = malloc(10 * sizeof(*node_creation_arguments));
 
     pthread_t sim;
 
@@ -132,29 +136,40 @@ int main()
     //Node 5 to Node 1
     pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[8]); //Node 5 "server" port
     pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[1]); //Node 1 "client" port
-
-    //Beginning of Transactions
-    printf("End of Thread Creation.\n");
     
-    //Initialization of Structure
+    //Initialization of Argument Structures
     Node_Tx_Args tx_arguments;
     Node_Rx_Args rx_arguments;
     memset(&tx_arguments, 0, sizeof(tx_arguments));
     memset(&rx_arguments, 0, sizeof(rx_arguments));
 
-    tx_arguments.index = 2;
-    rx_arguments.index = 1;
-    tx_arguments.sock_fd = node_creation_arguments[3].sock_fd;
-    rx_arguments.sock_fd = node_creation_arguments[0].sock_fd;
-    memcpy(&(tx_arguments.network_addr), &(node_creation_arguments[3].server_addr), sizeof(node_creation_arguments[3].server_addr));
-    memcpy(&(rx_arguments.network_addr), &(node_creation_arguments[0].client_addr), sizeof(node_creation_arguments[3].client_addr));
+    //Initialize the Ring of Nodes
+    fabric_init(&node_creation_arguments);
 
-    memset(tx_arguments.tx_data.buffer, 0xDEADBEEF, 1);
-    memset(tx_arguments.tx_data.buffer + 1, 0xAB, 2);
+    //Temporary code
+    char message[PACKET_SIZE];
+    memset(message, 0, sizeof(message));
+    bit_write_index(&(message[0]), 1);
+    bit_write_index(&(message[1]), 1);
+
+    printf("%x %x\n", message[1], message[0]);
+    
+    set_tx_arguments(0, node_creation_arguments[3], &tx_arguments, message);
+    set_rx_arguments(1, node_creation_arguments[0], &rx_arguments);
 
     node_tx(&tx_arguments);
     node_rx(&rx_arguments);
 
+    printf("%x ", rx_arguments.rx_data.small_flit.packet_header_1);
+    printf("%x\n", rx_arguments.rx_data.small_flit.packet_header_0);
+
+    set_tx_arguments(1, node_creation_arguments[0], &tx_arguments, message);
+    set_rx_arguments(0, node_creation_arguments[3], &rx_arguments);
+
+    node_tx(&tx_arguments);
+    node_rx(&rx_arguments);
+
+    /* Miscellaneous code for memory testing of the structures
     printf("%x\n", (rx_arguments.rx_data.buffer));
     printf("%x %x\n", &(rx_arguments.rx_data.small_flit.packet_header_0), &(rx_arguments.rx_data.small_flit.packet_header_1));
 
@@ -163,10 +178,17 @@ int main()
 
     printf("%d\n", sizeof(*(rx_arguments.rx_data.buffer)));
     printf("%d\n", sizeof(unsigned char));
+    */
 
+    printf("%x\n", *(rx_arguments.rx_data.buffer));
+
+    //Close All Threads and Free Memory
     int i;
+
     for (i = 0; i < 10; i++)
         close(node_creation_arguments[i].sock_fd); 
+
+    free(node_creation_arguments);
 
     pthread_exit(NULL);
     return(0);
@@ -271,40 +293,115 @@ void node_rx(void* arguments)
     return; 
 }
 
-unsigned int bit_read_index(unsigned int num, int index)
+void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet)
 {
-    unsigned int result;
+    tx_args -> index = tx.index;
+    tx_args -> sock_fd = tx.sock_fd;
 
-    if(index >= 32)
+    if (is_server)
+    {
+        memcpy(&(tx_args -> network_addr), &(tx.client_addr), sizeof(tx.client_addr));
+    }
+    else
+    {
+        memcpy(&(tx_args -> network_addr), &(tx.server_addr), sizeof(tx.server_addr));
+    }
+ 
+    memcpy(&(tx_args -> tx_data.buffer), packet, PACKET_SIZE);
+
+    return;
+}
+
+void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args)
+{
+    rx_args -> index = rx.index;
+    rx_args -> sock_fd = rx.sock_fd;
+
+    if (is_server)
+    {
+        memcpy(&(rx_args -> network_addr), &(rx.client_addr), sizeof(rx.client_addr));
+    }
+    else
+    {
+        memcpy(&(rx_args -> network_addr), &(rx.server_addr), sizeof(rx.server_addr));
+    }
+
+    return;
+}
+
+void fabric_init(Node_Creation_Args** nodes)
+{ 
+    //Initialization of Argument Structures
+    Node_Tx_Args tx_arguments;
+    Node_Rx_Args rx_arguments;
+    memset(&tx_arguments, 0, sizeof(tx_arguments));
+    memset(&rx_arguments, 0, sizeof(rx_arguments));
+
+    //Set Initialization Message to 0
+    unsigned char init_message[PACKET_SIZE];
+    int temp = 0;
+    memset(init_message, temp, sizeof(init_message));
+
+    int server_index, client_index;
+    
+    server_index = 0;
+    client_index = 3;
+
+    while(server_index <= 8)
+    {
+        set_tx_arguments(0, (*nodes)[client_index], &tx_arguments, init_message);
+        set_rx_arguments(1, (*nodes)[server_index], &rx_arguments);
+
+        node_tx(&tx_arguments);
+        node_rx(&rx_arguments);
+
+        memcpy(&((*nodes)[server_index].client_addr), &(rx_arguments.network_addr), sizeof((*nodes)[server_index].client_addr));
+
+        //Validation print statement
+        printf("Connection from Node %d to Node %d initializated.\n", (*nodes)[server_index].index, (*nodes)[client_index].index);
+
+        //Index Update Code
+        server_index += 2;
+        client_index = client_index == 9 ? 1 : client_index + 2;
+    }
+
+    return;
+}
+
+unsigned char bit_read_index(unsigned char num, char index)
+{
+    unsigned char result;
+
+    if(index >= 8)
     {
         return(NULL);
     }
 
     result = num >> index;
-    result = 0x00000001 & index;
+    result = 0x01 & result;
 
     return(result);
 }
 
-unsigned int bit_write_index(unsigned int num, int index)
+void bit_write_index(unsigned char* num, char index)
 {
-    unsigned int result;
-    if(index >= 32)
+    unsigned char temp;
+    if(index >= 8)
     {
-        return(NULL);
+        return;
     }
 
-    result = 1 << index;
+    temp = 1 << index;
 
     if(num != 0)
     {
-        result = num | result;
+        *num = *num | temp;
     }
     else
     {
-        result = num & ~result;
+        *num = *num & ~temp;
     }
 
-    return(result);
+    return;
 }
 
