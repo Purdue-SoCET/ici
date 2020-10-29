@@ -118,24 +118,24 @@ int main()
     node_creation_arguments[9].port = PORT_4;
 
     //Node 1 to Node 2
-    pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[0]); //Node 1 "server" port
-    pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[3]); //Node 2 "client" port
+    node_server_create((void*) &node_creation_arguments[0]); //Node 1 "server" port
+    node_client_create((void*) &node_creation_arguments[3]); //Node 2 "client" port
 
     //Node 2 to Node 3
-    pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[2]); //Node 2 "server" port
-    pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[5]); //Node 3 "client" port
+    node_server_create((void*) &node_creation_arguments[2]); //Node 2 "server" port
+    node_client_create((void*) &node_creation_arguments[5]); //Node 3 "client" port
    
     //Node 3 to Node 4
-    pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[4]); //Node 3 "server" port
-    pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[7]); //Node 4 "client" port
+    node_server_create((void*) &node_creation_arguments[4]); //Node 3 "server" port
+    node_client_create((void*) &node_creation_arguments[7]); //Node 4 "client" port
 
     //Node 4 to Node 5
-    pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[6]); //Node 4 "server" port
-    pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[9]); //Node 5 "client" port
+    node_server_create((void*) &node_creation_arguments[6]); //Node 4 "server" port
+    node_client_create((void*) &node_creation_arguments[9]); //Node 5 "client" port
 
     //Node 5 to Node 1
-    pthread_create(&sim, NULL, node_server_create, (void*) &node_creation_arguments[8]); //Node 5 "server" port
-    pthread_create(&sim, NULL, node_client_create, (void*) &node_creation_arguments[1]); //Node 1 "client" port
+    node_server_create((void*) &node_creation_arguments[8]); //Node 5 "server" port
+    node_client_create((void*) &node_creation_arguments[1]); //Node 1 "client" port
     
     //Initialization of Argument Structures
     Node_Tx_Args tx_arguments;
@@ -166,8 +166,9 @@ int main()
     set_tx_arguments(1, node_creation_arguments[0], &tx_arguments, message);
     set_rx_arguments(0, node_creation_arguments[3], &rx_arguments);
 
+    pthread_create(&sim, NULL, node_rx, (void*) &rx_arguments);
     node_tx(&tx_arguments);
-    node_rx(&rx_arguments);
+    //node_rx(&rx_arguments);
 
     /* Miscellaneous code for memory testing of the structures
     printf("%x\n", (rx_arguments.rx_data.buffer));
