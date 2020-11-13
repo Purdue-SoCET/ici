@@ -16,6 +16,13 @@
 #define PORT_5 9069
 #define PACKET_SIZE 512
 
+typedef struct Socket_Credit {
+    int high_priority_credit;
+    int low_priority_credit;
+    int sync_credit;
+    int async_credit;
+} Socket_Credit;
+
 typedef struct Node_Creation_Args {
     int index;
     //Networking Fields
@@ -23,14 +30,8 @@ typedef struct Node_Creation_Args {
     int sock_fd;
     struct sockaddr_in server_addr;
     struct sockaddr_in client_addr;
+    Socket_Credit socket_credit;
 } Node_Creation_Args;
-
-typedef struct Node_Credit {
-    int high_priority_credit;
-    int low_priority_credit;
-    int sync_credit;
-    int async_credit;
-} Node_Credit;
 
 typedef struct Small_Flit {
     unsigned char packet_header_0;
@@ -47,7 +48,7 @@ typedef struct Node_Tx_Args {
     int sock_fd;
     struct sockaddr_in network_addr;
     Data tx_data;
-    Node_Credit* curr_node_credit;
+    Socket_Credit* curr_socket_credit;
 } Node_Tx_Args;
 
 typedef struct Node_Rx_Args {
@@ -55,16 +56,16 @@ typedef struct Node_Rx_Args {
     int sock_fd;
     struct sockaddr_in network_addr;
     Data rx_data;
-    Node_Credit* curr_node_credit;
+    Socket_Credit* curr_socket_credit;
 } Node_Rx_Args;
 
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
 void node_rx(void* arguments);
-void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet, Node_Credit* curr_node_credit);
-void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args, Node_Credit* curr_node_credit);
-void fabric_init(Node_Creation_Args** nodes, Node_Credit** node_credit_arr_ptr);
+void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet);
+void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args);
+void fabric_init(Node_Creation_Args** nodes);
 unsigned char bit_read_index(unsigned char num, char index);
 void bit_write_index(unsigned char* num, char index);
 
@@ -146,11 +147,6 @@ int main()
     //Node 5 to Node 1
     node_server_create((void*) &node_creation_arguments[8]); //Node 5 "server" port
     node_client_create((void*) &node_creation_arguments[1]); //Node 1 "client" port
-
-    //Declaration and Initialization of Node Credit Structures
-    Node_Credit* node_credit_arr;
-    node_credit_arr = malloc(sizeof(*node_credit_arr) * 5);
-    memset(node_credit_arr, 0, sizeof(*node_credit_arr) * 5);
     
     //Initialization of Argument Structures
     Node_Tx_Args tx_arguments;
@@ -159,7 +155,7 @@ int main()
     memset(&rx_arguments, 0, sizeof(rx_arguments));
 
     //Initialize the Ring of Nodes
-    fabric_init(&node_creation_arguments, &node_credit_arr);
+    fabric_init(&node_creation_arguments);
 
     //Temporary code
     char message[PACKET_SIZE];
@@ -167,8 +163,8 @@ int main()
 
     printf("%x %x\n", message[1], message[0]);
    
-    set_tx_arguments(0, node_creation_arguments[3], &tx_arguments, message, &node_credit_arr[1]);
-    set_rx_arguments(1, node_creation_arguments[0], &rx_arguments, &node_credit_arr[0]);
+    set_tx_arguments(0, node_creation_arguments[3], &tx_arguments, message);
+    set_rx_arguments(1, node_creation_arguments[0], &rx_arguments);
 
     node_tx(&tx_arguments);
     node_rx(&rx_arguments);
@@ -176,8 +172,8 @@ int main()
     printf("%x ", rx_arguments.rx_data.small_flit.packet_header_1);
     printf("%x\n", rx_arguments.rx_data.small_flit.packet_header_0);
 
-    set_tx_arguments(1, node_creation_arguments[0], &tx_arguments, message, &node_credit_arr[0]);
-    set_rx_arguments(0, node_creation_arguments[3], &rx_arguments, &node_credit_arr[1]);
+    set_tx_arguments(1, node_creation_arguments[0], &tx_arguments, message);
+    set_rx_arguments(0, node_creation_arguments[3], &rx_arguments);
 
     pthread_create(&sim, NULL, node_rx, (void*) &rx_arguments);
     node_tx(&tx_arguments);
@@ -311,37 +307,37 @@ void node_rx(void* arguments)
     //High and Low priority credits
     if (bit_read_index(packet_header_0, 6)) //If Credit Return: Priority 4/8 is set
     {
-        rx_arguments -> curr_node_credit -> high_priority_credit += bit_read_index(packet_header_0, 7) ? 8 : bit_read_index(packet_header_0, 0) ? 0 : 2;
-        rx_arguments -> curr_node_credit -> low_priority_credit += bit_read_index(packet_header_1, 0) ? 8 : 0 ;
+        rx_arguments -> curr_socket_credit -> high_priority_credit += bit_read_index(packet_header_0, 7) ? 8 : bit_read_index(packet_header_0, 0) ? 0 : 2;
+        rx_arguments -> curr_socket_credit -> low_priority_credit += bit_read_index(packet_header_1, 0) ? 8 : 0 ;
     }
     else
     {
-        rx_arguments -> curr_node_credit -> high_priority_credit += bit_read_index(packet_header_0, 7) ? 4 : bit_read_index(packet_header_1, 0) ? 0 : 2;
-        rx_arguments -> curr_node_credit -> low_priority_credit += bit_read_index(packet_header_1, 0) ? 4 : 0;
+        rx_arguments -> curr_socket_credit -> high_priority_credit += bit_read_index(packet_header_0, 7) ? 4 : bit_read_index(packet_header_1, 0) ? 0 : 2;
+        rx_arguments -> curr_socket_credit -> low_priority_credit += bit_read_index(packet_header_1, 0) ? 4 : 0;
     }
 
     //Asynchronous and Synchronous credits
     if (bit_read_index(packet_header_1, 1)) //If Credit Return: Class 4/8 is set
     {
-        rx_arguments -> curr_node_credit -> async_credit += bit_read_index(packet_header_1, 2) ? 8 : bit_read_index(packet_header_1, 3) ? 0 : 2;
-        rx_arguments -> curr_node_credit -> sync_credit += bit_read_index(packet_header_1, 3) ? 8 : 0 ;
+        rx_arguments -> curr_socket_credit -> async_credit += bit_read_index(packet_header_1, 2) ? 8 : bit_read_index(packet_header_1, 3) ? 0 : 2;
+        rx_arguments -> curr_socket_credit -> sync_credit += bit_read_index(packet_header_1, 3) ? 8 : 0 ;
     }
     else
     {
-        rx_arguments -> curr_node_credit -> async_credit += bit_read_index(packet_header_1, 2) ? 4 : bit_read_index(packet_header_1, 3) ? 0 : 2;
-        rx_arguments -> curr_node_credit -> sync_credit += bit_read_index(packet_header_1, 3) ? 4 : 0;
+        rx_arguments -> curr_socket_credit -> async_credit += bit_read_index(packet_header_1, 2) ? 4 : bit_read_index(packet_header_1, 3) ? 0 : 2;
+        rx_arguments -> curr_socket_credit -> sync_credit += bit_read_index(packet_header_1, 3) ? 4 : 0;
     }
 
  
     return; 
 }
 
-void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet, Node_Credit* curr_node_credit)
+void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_args, unsigned char* packet)
 {
     tx_args -> index = tx.index;
     tx_args -> sock_fd = tx.sock_fd;
 
-    tx_args -> curr_node_credit = curr_node_credit;
+    tx_args -> curr_socket_credit = &(tx.socket_credit);
 
     if (is_server)
     {
@@ -357,12 +353,12 @@ void set_tx_arguments(int is_server, Node_Creation_Args tx, Node_Tx_Args* tx_arg
     return;
 }
 
-void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args, Node_Credit* curr_node_credit)
+void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_args)
 {
     rx_args -> index = rx.index;
     rx_args -> sock_fd = rx.sock_fd;
 
-    rx_args -> curr_node_credit = curr_node_credit;
+    rx_args -> curr_socket_credit = &(rx.socket_credit);
 
     if (is_server)
     {
@@ -376,7 +372,7 @@ void set_rx_arguments(int is_server, Node_Creation_Args rx, Node_Rx_Args* rx_arg
     return;
 }
 
-void fabric_init(Node_Creation_Args** nodes, Node_Credit** node_credit_arr_ptr)
+void fabric_init(Node_Creation_Args** nodes)
 { 
     //Initialization of Argument Structures
     Node_Tx_Args tx_arguments;
@@ -391,15 +387,13 @@ void fabric_init(Node_Creation_Args** nodes, Node_Credit** node_credit_arr_ptr)
 
     int server_index, client_index, tx_index, rx_index;
     
-    tx_index = 0;
-    rx_index = 1;
     server_index = 0;
     client_index = 3;
 
     while(server_index <= 8)
     {
-        set_tx_arguments(0, (*nodes)[client_index], &tx_arguments, init_message, *node_credit_arr_ptr + tx_index);
-        set_rx_arguments(1, (*nodes)[server_index], &rx_arguments, *node_credit_arr_ptr + rx_index);
+        set_tx_arguments(0, (*nodes)[client_index], &tx_arguments, init_message);
+        set_rx_arguments(1, (*nodes)[server_index], &rx_arguments);
 
         node_tx(&tx_arguments);
         node_rx(&rx_arguments);
@@ -410,8 +404,6 @@ void fabric_init(Node_Creation_Args** nodes, Node_Credit** node_credit_arr_ptr)
         printf("Connection from Node %d to Node %d initializated.\n", (*nodes)[server_index].index, (*nodes)[client_index].index);
 
         //Index Update Code
-        tx_index++;
-        rx_index = rx_index == 4 ? rx_index = 0 : ++rx_index;
         server_index += 2;
         client_index = client_index == 9 ? 1 : client_index + 2;
     }
