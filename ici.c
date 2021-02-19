@@ -23,6 +23,11 @@ typedef struct Socket_Credit {
     int low_priority_credit;
     int sync_credit;
     int async_credit;
+    int multicast_credit;
+    int port0_credit;
+    int port1_credit;
+    //int port2_credit;
+    //int port3_credit;
 } Socket_Credit;
 
 typedef struct Node_Creation_Args {
