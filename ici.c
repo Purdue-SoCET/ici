@@ -33,6 +33,8 @@
 #define N5_N1 8
 #define N5_N4 9
 
+#define FLIT_TARGET_0 96
+
 typedef struct Socket_Credit {
     int high_priority_credit;
     int low_priority_credit;
@@ -93,15 +95,22 @@ typedef struct Node_Rx_Args {
     Socket_Credit* curr_socket_credit;
 } Node_Rx_Args;
 
+//This is because we are threading this function
+typedef struct Continuous_Rx_Args {
+    void* arguments;
+    void* creation_arguments;
+} Continuous_Rx_Args;
+
 //Global Buffer Pointers
 unsigned char*** node_rx_buffers;
 
-void create_bitmap_message_1(Node_Creation_Args*, int, char*);
+void create_bitmap_message_1(Node_Creation_Args*, int, int, char*);
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
 void node_rx(void* arguments);
-void continuous_rx(void* arguments);
+void continuous_rx(void* args);
+void set_node_creation_arguments(Node_Creation_Args* node_creation_arguments, int index, int nodes_connected_to, int nodes_in_fabric, int node_index, int port);
 void set_tx_arguments(int is_server, Node_Creation_Args* tx, Node_Tx_Args* tx_args, unsigned char* packet);
 void set_rx_arguments(int is_server, Node_Creation_Args* rx, Node_Rx_Args* rx_args);
 void fabric_init(Node_Creation_Args** nodes);
@@ -243,44 +252,55 @@ int main()
     //Initialize the Ring of Nodes
     fabric_init(&node_creation_arguments);
 
+    Continuous_Rx_Args* args;
+    args = malloc(10 * sizeof(*args));
+
     int node_count;
     for (node_count = 0; node_count <= 8; node_count += 2)
     {
         memset(&(rx_arguments[node_count]), 0, sizeof(rx_arguments[node_count]));
         set_rx_arguments(1, &node_creation_arguments[node_count], &(rx_arguments[node_count]));
-        pthread_create(&sim, NULL, continuous_rx, (void*) &(rx_arguments[node_count]));
+        args[node_count].arguments = (void*) &(rx_arguments[node_count]);
+        args[node_count].creation_arguments = (void*) node_creation_arguments;
+        pthread_create(&sim, NULL, continuous_rx, (void*) &(args[node_count]));
     }
 
     for (node_count = 1; node_count <= 9; node_count += 2)
     {
         memset(&(rx_arguments[node_count]), 0, sizeof(rx_arguments[node_count]));
         set_rx_arguments(0, &node_creation_arguments[node_count], &(rx_arguments[node_count]));
-        pthread_create(&sim, NULL, continuous_rx, (void*) &(rx_arguments[node_count]));
+        args[node_count].arguments = (void*) &(rx_arguments[node_count]);
+        args[node_count].creation_arguments = (void*) node_creation_arguments;
+        pthread_create(&sim, NULL, continuous_rx, (void*) &(args[node_count]));
     }
 
     //Temporary code
     char message[PACKET_SIZE];
     memset(message, 0, PACKET_SIZE * sizeof(*message));
 
-    create_bitmap_message_1(node_creation_arguments, N2_N1, message);
+    create_bitmap_message_1(node_creation_arguments, N2_N1, 1, message);
     set_tx_arguments(0, &node_creation_arguments[N2_N1], &tx_arguments, message);
     node_tx(&tx_arguments);
 
-    create_bitmap_message_1(node_creation_arguments, N1_N2, message);
-    set_tx_arguments(1, &node_creation_arguments[N1_N2], &tx_arguments, message);
-    node_tx(&tx_arguments);
-
-    create_bitmap_message_1(node_creation_arguments, N4_N5, message);
-    set_tx_arguments(1, &node_creation_arguments[N4_N5], &tx_arguments, message);
-    node_tx(&tx_arguments);
-
-    create_bitmap_message_1(node_creation_arguments, N5_N4, message);
+    create_bitmap_message_1(node_creation_arguments, N5_N4, 3, message);
     set_tx_arguments(0, &node_creation_arguments[N5_N4], &tx_arguments, message);
     node_tx(&tx_arguments);
 
-    create_bitmap_message_1(node_creation_arguments, N3_N2, message);
-    set_tx_arguments(0, &node_creation_arguments[N3_N2], &tx_arguments, message);
-    node_tx(&tx_arguments);
+    // create_bitmap_message_1(node_creation_arguments, N1_N2, 2, message);
+    // set_tx_arguments(1, &node_creation_arguments[N1_N2], &tx_arguments, message);
+    // node_tx(&tx_arguments);
+
+    // create_bitmap_message_1(node_creation_arguments, N4_N5, 5, message);
+    // set_tx_arguments(1, &node_creation_arguments[N4_N5], &tx_arguments, message);
+    // node_tx(&tx_arguments);
+
+    // create_bitmap_message_1(node_creation_arguments, N5_N4, 4, message);
+    // set_tx_arguments(0, &node_creation_arguments[N5_N4], &tx_arguments, message);
+    // node_tx(&tx_arguments);
+
+    // create_bitmap_message_1(node_creation_arguments, N3_N2, 2, message);
+    // set_tx_arguments(0, &node_creation_arguments[N3_N2], &tx_arguments, message);
+    // node_tx(&tx_arguments);
 
     // printf("%x\n", rx_arguments[0].rx_data.small_flit.packet_header_1);
     // printf("%x\n", rx_arguments[0].rx_data.small_flit.packet_header_0);
@@ -329,11 +349,12 @@ int main()
 
     free(node_creation_arguments);
     free(rx_arguments);
+    free(args);
 
     return(0);
 }
 
-void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, char* message)
+void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, int target, char* message)
 {
     message[0] = 0x000000FF & node_creation_arguments[index].node_index;
     message[1] = (0x0000FF00 & node_creation_arguments[index].node_index) >> 8;
@@ -347,6 +368,10 @@ void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int in
     message[9] = (0x0000FF00 & node_creation_arguments[index].nodes_in_fabric) >> 8;
     message[10] = (0x00FF0000 & node_creation_arguments[index].nodes_in_fabric) >> 16;
     message[11] = (0xFF000000 & node_creation_arguments[index].nodes_in_fabric) >> 24;
+    message[12] = 0x000000FF & target;
+    message[13] = (0x0000FF00 & target) >> 8;
+    message[14] = (0x00FF0000 & target) >> 16;
+    message[15] = (0xFF000000 & target) >> 24;
 
     return;
 }
@@ -571,11 +596,18 @@ void node_rx(void* arguments)
     return; 
 }
 
-void continuous_rx(void* arguments)
+void continuous_rx(void* args)
     {
         int pointer = 0;
 
-        Node_Rx_Args* rx_arguments = arguments;
+        //Used for forwarding messages
+        Node_Tx_Args tx_arguments;
+        Continuous_Rx_Args* function_args = args;
+        Node_Creation_Args temp_node_creation_arguments;
+
+        Node_Creation_Args* node_creation_arguments = function_args -> creation_arguments;
+        Node_Rx_Args* rx_arguments = function_args -> arguments;
+
         while(1)
         {
             printf("Waiting...\n");
@@ -587,12 +619,122 @@ void continuous_rx(void* arguments)
                 //node_rx_buffers[temp][pointer][i] = rx_arguments -> rx_data.buffer[i];
                 memcpy(&(node_rx_buffers[temp][pointer][i]), &(rx_arguments -> rx_data.buffer[i]), sizeof(rx_arguments -> rx_data.buffer[i]));
             }
-            pointer = pointer + 1;
-            pointer = pointer > NUM_BUFFER_SLOTS - 1 ? 0 : pointer;
-            write_buffers();
-            printf("Buffer Written (Pointer at %d)\n", pointer);
+
+            //To create a forwarding message if this is not the destination node
+            int dest = rx_arguments -> rx_data.buffer[FLIT_TARGET_0 / (sizeof(char) * 8)] & 0x1F;
+            int index = log10(rx_arguments -> node_index) / log10(2);
+            if (dest != index)
+            {
+                printf("Forwarding Message at Node %d\n", index);
+                //To set next destination of message
+                switch (index)
+                {
+                case 1:
+                    if ((dest == 5) | (dest == 4))
+                    {
+                        //Node 1 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N5]), sizeof(node_creation_arguments[N1_N5]));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 1 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N2]), sizeof(node_creation_arguments[N1_N2]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 2:
+                    if ((dest == 1) | (dest == 5))
+                    {
+                        //Node 2 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 2, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N2_N1]), sizeof(node_creation_arguments[N2_N1]));
+                        set_tx_arguments(0,&temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 2 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 2, 0, 0, 0, PORT_2);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N2_N3]), sizeof(node_creation_arguments[N2_N3]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 3:
+                    if ((dest == 1) | (dest == 2))
+                    {
+                        //Node 3 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 3, 0, 0, 0, PORT_2);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N3_N2]), sizeof(node_creation_arguments[N3_N2]));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 3 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 3, 0, 0, 0, PORT_3);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N3_N4]), sizeof(node_creation_arguments[N3_N4]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 4:
+                    if ((dest == 3) | (dest == 2))
+                    {
+                        //Node 4 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 4, 0, 0, 0, PORT_3);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N4_N3]), sizeof(node_creation_arguments[N4_N3]));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 4 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 4, 0, 0, 0, PORT_4);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N4_N5]), sizeof(node_creation_arguments[N4_N5]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 5:
+                    if ((dest == 4) | (dest == 3))
+                    {
+                        //Node 2 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 5, 0, 0, 0, PORT_4);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N5_N4]), sizeof(node_creation_arguments[N5_N4]));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 2 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 5, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N5_N1]), sizeof(node_creation_arguments[N5_N1]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                
+                default:
+                    printf("AN ERROR HAS OCCURRED IN FORWARDING!\n");
+                    break;
+                }
+                node_tx(&tx_arguments);
+            }
+            else
+            {
+                pointer = pointer + 1;
+                pointer = pointer > NUM_BUFFER_SLOTS - 1 ? 0 : pointer;
+                write_buffers();
+                printf("Buffer at Node %d Written (Pointer at %d)\n", index, pointer);
+            }
         }
     }
+
+void set_node_creation_arguments(Node_Creation_Args* node_creation_arguments, int index, int nodes_connected_to, int nodes_in_fabric, int node_index, int port)
+{
+    memset(node_creation_arguments, 0, sizeof(node_creation_arguments));    
+    node_creation_arguments -> index = index;
+    node_creation_arguments -> nodes_connected_to = nodes_connected_to;
+    node_creation_arguments -> nodes_in_fabric = nodes_in_fabric;
+    node_creation_arguments -> node_index = node_index;
+    node_creation_arguments -> port = port;
+}
 
 void set_tx_arguments(int is_server, Node_Creation_Args* tx, Node_Tx_Args* tx_args, unsigned char* packet)
 {
