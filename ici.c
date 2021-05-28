@@ -104,7 +104,10 @@ typedef struct Continuous_Rx_Args {
 //Global Buffer Pointers
 unsigned char*** node_rx_buffers;
 
-void create_bitmap_message_1(Node_Creation_Args*, int, int, char*);
+int circle_count = 0; //Duck tape variable
+int discovery_done = 0; //^^
+
+void create_bitmap_message_1(Node_Creation_Args*, int, int, int, int, char*);
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
@@ -278,13 +281,16 @@ int main()
     char message[PACKET_SIZE];
     memset(message, 0, PACKET_SIZE * sizeof(*message));
 
-    create_bitmap_message_1(node_creation_arguments, N2_N1, 1, message);
-    set_tx_arguments(0, &node_creation_arguments[N2_N1], &tx_arguments, message);
+    create_bitmap_message_1(node_creation_arguments, N1_N2, 1, 0, 0, message);
+    set_tx_arguments(0, &node_creation_arguments[N1_N2], &tx_arguments, message);
     node_tx(&tx_arguments);
 
-    create_bitmap_message_1(node_creation_arguments, N5_N4, 3, message);
-    set_tx_arguments(0, &node_creation_arguments[N5_N4], &tx_arguments, message);
-    node_tx(&tx_arguments);
+    // create_bitmap_message_1(node_creation_arguments, N5_N4, 3, 0, 0, message);
+    // set_tx_arguments(0, &node_creation_arguments[N5_N4], &tx_arguments, message);
+    // node_tx(&tx_arguments);
+    // create_bitmap_message_1(node_creation_arguments, N5_N4, 2, 0, 0, message);
+    // set_tx_arguments(0, &node_creation_arguments[N5_N4], &tx_arguments, message);
+    // node_tx(&tx_arguments);
 
     // create_bitmap_message_1(node_creation_arguments, N1_N2, 2, message);
     // set_tx_arguments(1, &node_creation_arguments[N1_N2], &tx_arguments, message);
@@ -354,7 +360,7 @@ int main()
     return(0);
 }
 
-void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, int target, char* message)
+void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, int target, int nodes_found, int hop_bitmap, char* message)
 {
     message[0] = 0x000000FF & node_creation_arguments[index].node_index;
     message[1] = (0x0000FF00 & node_creation_arguments[index].node_index) >> 8;
@@ -372,6 +378,16 @@ void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int in
     message[13] = (0x0000FF00 & target) >> 8;
     message[14] = (0x00FF0000 & target) >> 16;
     message[15] = (0xFF000000 & target) >> 24;
+    message[16] = 0x000000FF & nodes_found;
+    message[17] = (0x0000FF00 & nodes_found) >> 8;
+    message[18] = (0x00FF0000 & nodes_found) >> 16;
+    message[19] = (0xFF000000 & nodes_found) >> 24;
+    message[20] = 0x000000FF & hop_bitmap;
+    message[21] = (0x0000FF00 & hop_bitmap) >> 8;
+    message[22] = (0x00FF0000 & hop_bitmap) >> 16;
+    message[23] = (0xFF000000 & hop_bitmap) >> 24;
+    //TODO: Expand from 5 node hop bit map to 32 node hop bitmap (160 bits)
+    //TODO: Keep track of which port the discovery message came in on for each node (a trace of ports connected too)
 
     return;
 }
@@ -620,17 +636,63 @@ void continuous_rx(void* args)
                 memcpy(&(node_rx_buffers[temp][pointer][i]), &(rx_arguments -> rx_data.buffer[i]), sizeof(rx_arguments -> rx_data.buffer[i]));
             }
 
+            //Locate nodes found bitmap, check if current nodes bit is set, if it has already been set, already visited every node in ring
+            //Stop sending discovery messages
+            //If bit is not set, set it and (but not yet)
+            //For each found node, increment its hop value (use index of found nodes that have a 1 to find the corresponding bits in the hop map, (5 * (i + 1) - 1:5 * i) is value of hop distance)
+            //ASSUMPTION: using a ring configuration, so do not need to worry about sequence number because each hop value is unique i.e. no two hop values will be the same
+            //Now set found bit for current node
             //To create a forwarding message if this is not the destination node
             int dest = rx_arguments -> rx_data.buffer[FLIT_TARGET_0 / (sizeof(char) * 8)] & 0x1F;
             int index = log10(rx_arguments -> node_index) / log10(2);
-            if (dest != index)
+            circle_count = index == 1 ? circle_count + 1 : circle_count; //TEMP
+
+            int curr_nodes_found;
+            int curr_hop_values;
+            curr_nodes_found = (rx_arguments -> rx_data.buffer)[16];
+            curr_nodes_found |= (rx_arguments -> rx_data.buffer)[17] << 8;
+            curr_hop_values = (rx_arguments -> rx_data.buffer)[20];
+            curr_hop_values |= (rx_arguments -> rx_data.buffer)[21] << 8;
+            curr_hop_values |= (rx_arguments -> rx_data.buffer)[22] << 16;
+            curr_hop_values |= (rx_arguments -> rx_data.buffer)[23] << 24;
+            if ((curr_nodes_found >> index) & 0x1) 
+            {
+                discovery_done = 1;
+            }
+            if (!discovery_done) 
+            {
+                int loop_control;
+                //CHANGE FROM 1 to 5 -> 0 to 32
+                for (loop_control = 0; loop_control < 5; loop_control++)
+                {
+                    int hop_increment = (curr_nodes_found >> loop_control) & 0x1;
+                    if (!hop_increment)
+                    {
+                        int temp = 0x1F; //So that an integer conversion happens
+                        int hop_value = (curr_hop_values >> (loop_control * 5)) & temp; //(5 * (i + 1) - 1:5 * i)
+                        hop_value++;
+                        curr_hop_values = curr_hop_values & ~(temp << (loop_control * 5));
+                        curr_hop_values = curr_hop_values | (hop_value << (loop_control * 5));
+                        printf("%x\n", curr_hop_values;
+                    }
+                }
+                curr_nodes_found |= (0x1 << index);
+                (rx_arguments -> rx_data.buffer)[16] = 0xFF & curr_nodes_found;
+                (rx_arguments -> rx_data.buffer)[17] = (0xFF00 & curr_nodes_found) << 8;
+                (rx_arguments -> rx_data.buffer)[20] = 0xFF & curr_hop_values;
+                (rx_arguments -> rx_data.buffer)[21] = (0xFF00 & curr_hop_values) << 8;
+                (rx_arguments -> rx_data.buffer)[22] = (0xFF0000 & curr_hop_values) << 16;
+                (rx_arguments -> rx_data.buffer)[23] = (0xFF000000 & curr_hop_values) << 24;
+            }
+
+            if (dest != index | !discovery_done) //(circle_count < 2)
             {
                 printf("Forwarding Message at Node %d\n", index);
                 //To set next destination of message
                 switch (index)
                 {
                 case 1:
-                    if ((dest == 5) | (dest == 4))
+                    if ((dest == 5) | (dest == 4) & 0)
                     {
                         //Node 1 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
@@ -646,7 +708,7 @@ void continuous_rx(void* args)
                     }
                     break;
                 case 2:
-                    if ((dest == 1) | (dest == 5))
+                    if (((dest == 1) | (dest == 5)) & 0)
                     {
                         //Node 2 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 2, 0, 0, 0, PORT_1);
@@ -662,7 +724,7 @@ void continuous_rx(void* args)
                     }
                     break;
                 case 3:
-                    if ((dest == 1) | (dest == 2))
+                    if (((dest == 1) | (dest == 2)) & 0)
                     {
                         //Node 3 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 3, 0, 0, 0, PORT_2);
@@ -678,7 +740,7 @@ void continuous_rx(void* args)
                     }
                     break;
                 case 4:
-                    if ((dest == 3) | (dest == 2))
+                    if (((dest == 3) | (dest == 2)) & 0)
                     {
                         //Node 4 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 4, 0, 0, 0, PORT_3);
@@ -694,7 +756,7 @@ void continuous_rx(void* args)
                     }
                     break;
                 case 5:
-                    if ((dest == 4) | (dest == 3))
+                    if (((dest == 4) | (dest == 3)) & 0)
                     {
                         //Node 2 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 5, 0, 0, 0, PORT_4);
