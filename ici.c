@@ -107,7 +107,7 @@ unsigned char*** node_rx_buffers;
 int circle_count = 0; //Duck tape variable
 int discovery_done = 0; //^^
 
-void create_bitmap_message_1(Node_Creation_Args*, int, int, int, int, char*);
+void create_bitmap_message_1(Node_Creation_Args*, int, int, int, uint32_t*, char*);
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
@@ -378,21 +378,22 @@ void node_create_function(int index, Node_Creation_Args* node_args, uint32_t nod
     node_args -> node_index = node_index;
     node_args -> port = port;
 }
-void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, int target, int nodes_found, int hop_bitmap, char* message)
+void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32_t index, uint32_t target, uint32_t nodes_found, uint32_t* hop_bitmap, char* message)
 {
-    message[0] = 0x000000FF & node_creation_arguments[index].node_index;
+    //NOTE: THE REASON IT IS PUSHED 4 TIMES EACH ELEMENT IS BECAUSE MESSAGE IS A CHAR (8BITS) WHILE TRYING TO STORE A 32 BITS IN EACH INDEX
+    message[0] = 0x000000FF & node_creation_arguments[index].node_index; //index of the node 
     message[1] = (0x0000FF00 & node_creation_arguments[index].node_index) >> 8;
     message[2] = (0x00FF0000 & node_creation_arguments[index].node_index) >> 16;
     message[3] = (0xFF000000 & node_creation_arguments[index].node_index) >> 24;
-    message[4] = 0x000000FF & node_creation_arguments[index].nodes_connected_to;
+    message[4] = 0x000000FF & node_creation_arguments[index].nodes_connected_to; //show the index of the nodes that the current nodes is connected to
     message[5] = (0x0000FF00 & node_creation_arguments[index].nodes_connected_to) >> 8;
     message[6] = (0x00FF0000 & node_creation_arguments[index].nodes_connected_to) >> 16;
     message[7] = (0xFF000000 & node_creation_arguments[index].nodes_connected_to) >> 24;
-    message[8] = 0x000000FF & node_creation_arguments[index].nodes_in_fabric;
+    message[8] = 0x000000FF & node_creation_arguments[index].nodes_in_fabric; //index of fabric manager
     message[9] = (0x0000FF00 & node_creation_arguments[index].nodes_in_fabric) >> 8;
     message[10] = (0x00FF0000 & node_creation_arguments[index].nodes_in_fabric) >> 16;
     message[11] = (0xFF000000 & node_creation_arguments[index].nodes_in_fabric) >> 24;
-    message[12] = 0x000000FF & target;
+    message[12] = 0x000000FF & target; //the target node it is trying to return
     message[13] = (0x0000FF00 & target) >> 8;
     message[14] = (0x00FF0000 & target) >> 16;
     message[15] = (0xFF000000 & target) >> 24;
@@ -400,15 +401,19 @@ void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int in
     message[17] = (0x0000FF00 & nodes_found) >> 8;
     message[18] = (0x00FF0000 & nodes_found) >> 16;
     message[19] = (0xFF000000 & nodes_found) >> 24;
-    message[20] = 0x000000FF & hop_bitmap;
-    message[21] = (0x0000FF00 & hop_bitmap) >> 8;
-    message[22] = (0x00FF0000 & hop_bitmap) >> 16;
-    message[23] = (0xFF000000 & hop_bitmap) >> 24;
-    //TODO: Expand from 5 node hop bit map to 32 node hop bitmap (160 bits)
-    //TODO: Keep track of which port the discovery message came in on for each node (a trace of ports connected too)
+    for (int i = 0; i < 5, i++) {
+        message[20 + (4 * i)] = 0x000000FF & hop_bitmap[i]; //contains the order of the passed nodes 
+        message[21 + (4 * i)] = (0x0000FF00 & hop_bitmap[i]) >> 8;
+        message[22 + (4 * i)] = (0x00FF0000 & hop_bitmap[i]) >> 16;
+        message[23 + (4 * i)] = (0xFF000000 & hop_bitmap[i]) >> 24;
+        //Instead of storing a single hop_bitmap, create an array of 5 hop_bitmaps each element of uint32t 
+    }
 
+    //TODO: Expand from 5 node hop bit map to 32 node hop bitmap (160 bits) (DONE WITH THE SPACE)
+    //TODO: Keep track of which port the discovery message came in on for each node (a trace of ports connected too)
     return;
 }
+
 
 void write_buffers()
 {
