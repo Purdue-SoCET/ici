@@ -121,6 +121,7 @@ unsigned char bit_read_index(unsigned char num, char index);
 void bit_write_index(unsigned char* num, char index);
 void write_buffers();
 unsigned char hex_to_ascii(unsigned char);
+void node_create_function(int index, Node_Creation_Args* node_args, uint32_t node_index, uint32_t connected_node, uint32_t fabric, int port);
 
 int main()
 {
@@ -134,62 +135,70 @@ int main()
 
     //Node 1 "server" port
     memset(&node_creation_arguments[N1_N2], 0, sizeof(node_creation_arguments[0]));
-    node_creation_arguments[N1_N2].index = 1;
-    node_creation_arguments[N1_N2].nodes_connected_to = 0x24;
-    node_creation_arguments[N1_N2].nodes_in_fabric = 0x3E;
-    node_creation_arguments[N1_N2].node_index = 0x2;
-    node_creation_arguments[N1_N2].port = PORT_1;
+    node_create_function(1, &(node_creation_arguments[N1_N2]), 0x2, 0x24, 0x3E, PORT_1);
+    //node_creation_arguments[N1_N2].index = 1;
+    //node_creation_arguments[N1_N2].nodes_connected_to = 0x24;
+    //node_creation_arguments[N1_N2].nodes_in_fabric = 0x3E;
+    //node_creation_arguments[N1_N2].node_index = 0x2;
+    //node_creation_arguments[N1_N2].port = PORT_1;
 
     //Node 1 "client" port
-    memset(&node_creation_arguments[N1_N5], 0, sizeof(node_creation_arguments[1]));    
-    node_creation_arguments[N1_N5].index = 1;
+    memset(&node_creation_arguments[N1_N5], 0, sizeof(node_creation_arguments[1]));   
+    node_create_function(1, &(node_creation_arguments[N1_N5]), 0x2, 0x24, 0x3E, PORT_5); 
+    /*node_creation_arguments[N1_N5].index = 1;
     node_creation_arguments[N1_N5].nodes_connected_to = 0x24;
     node_creation_arguments[N1_N5].nodes_in_fabric = 0x3E;
     node_creation_arguments[N1_N5].node_index = 0x2;
-    node_creation_arguments[N1_N5].port = PORT_5;
+    node_creation_arguments[N1_N5].port = PORT_5;*/
 
     //Node 2 "server" port
     memset(&node_creation_arguments[N2_N3], 0, sizeof(node_creation_arguments[2]));
-    node_creation_arguments[N2_N3].index = 2;
+    node_create_function(2, &(node_creation_arguments[N2_N3]), 0x4, 0xA, 0x3E, PORT_2); 
+    /*node_creation_arguments[N2_N3].index = 2;
     node_creation_arguments[N2_N3].nodes_connected_to = 0xA;
     node_creation_arguments[N2_N3].nodes_in_fabric = 0x3E;
     node_creation_arguments[N2_N3].node_index = 0x4;
-    node_creation_arguments[N2_N3].port = PORT_2;
+    node_creation_arguments[N2_N3].port = PORT_2;*/
 
     //Node 2 "client" port
     memset(&node_creation_arguments[N2_N1], 0, sizeof(node_creation_arguments[3]));
-    node_creation_arguments[N2_N1].index = 2;
+    node_create_function(2, &(node_creation_arguments[N2_N1]), 0x4, 0xA, 0x3E, PORT_1); 
+    /*node_creation_arguments[N2_N1].index = 2;
     node_creation_arguments[N2_N1].nodes_connected_to = 0xA;
     node_creation_arguments[N2_N1].nodes_in_fabric = 0x3E;
     node_creation_arguments[N2_N1].node_index = 0x4;
-    node_creation_arguments[N2_N1].port = PORT_1;
+    node_creation_arguments[N2_N1].port = PORT_1;*/
 
     //Node 3 "server" port
     memset(&node_creation_arguments[N3_N4], 0, sizeof(node_creation_arguments[4]));
-    node_creation_arguments[N3_N4].index = 3;
+    node_create_function(3, &(node_creation_arguments[N3_N4]), 0x8, 0x14, 0x3E, PORT_3); 
+    /*node_creation_arguments[N3_N4].index = 3;
     node_creation_arguments[N3_N4].nodes_connected_to = 0x14;
     node_creation_arguments[N3_N4].nodes_in_fabric = 0x3E;
     node_creation_arguments[N3_N4].node_index = 0x8;
-    node_creation_arguments[N3_N4].port = PORT_3;
+    node_creation_arguments[N3_N4].port = PORT_3;*/
 
     //Node 3 "client" port
     memset(&node_creation_arguments[N3_N2], 0, sizeof(node_creation_arguments[5]));
-    node_creation_arguments[N3_N2].index = 3;
+    node_create_function(3, &(node_creation_arguments[N3_N2]), 0x8, 0x14, 0x3E, PORT_2); 
+    /*node_creation_arguments[N3_N2].index = 3;
     node_creation_arguments[N3_N2].nodes_connected_to = 0x14;
     node_creation_arguments[N3_N2].nodes_in_fabric = 0x3E;
     node_creation_arguments[N3_N2].node_index = 0x8;
-    node_creation_arguments[N3_N2].port = PORT_2;
+    node_creation_arguments[N3_N2].port = PORT_2;*/
 
     //Node 4 "server" port
     memset(&node_creation_arguments[N4_N5], 0, sizeof(node_creation_arguments[6]));
-    node_creation_arguments[N4_N5].index = 4;
+    node_create_function(4, &(node_creation_arguments[N3_N4]), 0x10, 0x28, 0x3E, PORT_4); 
+    /*node_creation_arguments[N4_N5].index = 4;
     node_creation_arguments[N4_N5].nodes_connected_to = 0x28;
     node_creation_arguments[N4_N5].nodes_in_fabric = 0x3E;
     node_creation_arguments[N4_N5].node_index = 0x10;
-    node_creation_arguments[N4_N5].port = PORT_4;
+    node_creation_arguments[N4_N5].port = PORT_4;*/
 
     //Node 4 "client" port
     memset(&node_creation_arguments[N4_N3], 0, sizeof(node_creation_arguments[7]));
+    node_create_function(4, &(node_creation_arguments[N3_N4]), 0x10, 0x28, 0x3E, PORT_3); 
     node_creation_arguments[N4_N3].index = 4;
     node_creation_arguments[N4_N3].nodes_connected_to = 0x28;
     node_creation_arguments[N4_N3].nodes_in_fabric = 0x3E;
@@ -198,6 +207,7 @@ int main()
 
     //Node 5 "server" port
     memset(&node_creation_arguments[N5_N1], 0, sizeof(node_creation_arguments[8]));
+    node_create_function(5, &(node_creation_arguments[N5_N1]), 0x20, 0x12, 0x3E, PORT_5); 
     node_creation_arguments[N5_N1].index = 5;
     node_creation_arguments[N5_N1].nodes_connected_to = 0x12;
     node_creation_arguments[N5_N1].nodes_in_fabric = 0x3E;
@@ -206,6 +216,7 @@ int main()
 
     //Node 5 "client" port
     memset(&node_creation_arguments[N5_N4], 0, sizeof(node_creation_arguments[9]));
+    node_create_function(5, &(node_creation_arguments[N5_N4]), 0x20, 0x12, 0x3E, PORT_4); 
     node_creation_arguments[N5_N4].index = 5;
     node_creation_arguments[N5_N4].nodes_connected_to = 0x12;
     node_creation_arguments[N5_N4].nodes_in_fabric = 0x3E;
@@ -360,6 +371,13 @@ int main()
     return(0);
 }
 
+void node_create_function(int index, Node_Creation_Args* node_args, uint32_t node_index, uint32_t connected_node, uint32_t fabric, int port) {
+    node_args -> index = 1;
+    node_args -> nodes_connected_to = connected_node;
+    node_args -> nodes_in_fabric = fabric;
+    node_args -> node_index = node_index;
+    node_args -> port = port;
+}
 void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, int index, int target, int nodes_found, int hop_bitmap, char* message)
 {
     message[0] = 0x000000FF & node_creation_arguments[index].node_index;
@@ -673,7 +691,7 @@ void continuous_rx(void* args)
                         hop_value++;
                         curr_hop_values = curr_hop_values & ~(temp << (loop_control * 5));
                         curr_hop_values = curr_hop_values | (hop_value << (loop_control * 5));
-                        printf("%x\n", curr_hop_values;
+                        printf("%x\n", curr_hop_values);
                     }
                 }
                 curr_nodes_found |= (0x1 << index);
