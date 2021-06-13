@@ -199,29 +199,29 @@ int main()
     //Node 4 "client" port
     memset(&node_creation_arguments[N4_N3], 0, sizeof(node_creation_arguments[7]));
     node_create_function(4, &(node_creation_arguments[N3_N4]), 0x10, 0x28, 0x3E, PORT_3); 
-    node_creation_arguments[N4_N3].index = 4;
+    /*node_creation_arguments[N4_N3].index = 4;
     node_creation_arguments[N4_N3].nodes_connected_to = 0x28;
     node_creation_arguments[N4_N3].nodes_in_fabric = 0x3E;
     node_creation_arguments[N4_N3].node_index = 0x10;
-    node_creation_arguments[N4_N3].port = PORT_3;
+    node_creation_arguments[N4_N3].port = PORT_3;*/
 
     //Node 5 "server" port
     memset(&node_creation_arguments[N5_N1], 0, sizeof(node_creation_arguments[8]));
     node_create_function(5, &(node_creation_arguments[N5_N1]), 0x20, 0x12, 0x3E, PORT_5); 
-    node_creation_arguments[N5_N1].index = 5;
+    /*node_creation_arguments[N5_N1].index = 5;
     node_creation_arguments[N5_N1].nodes_connected_to = 0x12;
     node_creation_arguments[N5_N1].nodes_in_fabric = 0x3E;
     node_creation_arguments[N5_N1].node_index = 0x20;
-    node_creation_arguments[N5_N1].port = PORT_5;
+    node_creation_arguments[N5_N1].port = PORT_5;*/
 
     //Node 5 "client" port
     memset(&node_creation_arguments[N5_N4], 0, sizeof(node_creation_arguments[9]));
     node_create_function(5, &(node_creation_arguments[N5_N4]), 0x20, 0x12, 0x3E, PORT_4); 
-    node_creation_arguments[N5_N4].index = 5;
+    /*node_creation_arguments[N5_N4].index = 5;
     node_creation_arguments[N5_N4].nodes_connected_to = 0x12;
     node_creation_arguments[N5_N4].nodes_in_fabric = 0x3E;
     node_creation_arguments[N5_N4].node_index = 0x20;
-    node_creation_arguments[N5_N4].port = PORT_4;
+    node_creation_arguments[N5_N4].port = PORT_4;*/
 
     //Node 1 to Node 2
     node_server_create((void*) &node_creation_arguments[0]); //Node 1 "server" port
