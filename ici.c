@@ -107,7 +107,7 @@ unsigned char*** node_rx_buffers;
 int circle_count = 0; //Duck tape variable
 int discovery_done = 0; //^^
 
-void create_bitmap_message_1(Node_Creation_Args*, int, int, int, uint32_t*, char*);
+void create_bitmap_message_1(Node_Creation_Args*, uint32_t, uint32_t, uint32_t, uint32_t*, char*);
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
@@ -401,7 +401,7 @@ void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32
     message[17] = (0x0000FF00 & nodes_found) >> 8;
     message[18] = (0x00FF0000 & nodes_found) >> 16;
     message[19] = (0xFF000000 & nodes_found) >> 24;
-    for (int i = 0; i < 5, i++) {
+    for (int i = 0; i < 5; i++) {
         message[20 + (4 * i)] = 0x000000FF & hop_bitmap[i]; //contains the order of the passed nodes 
         message[21 + (4 * i)] = (0x0000FF00 & hop_bitmap[i]) >> 8;
         message[22 + (4 * i)] = (0x00FF0000 & hop_bitmap[i]) >> 16;
