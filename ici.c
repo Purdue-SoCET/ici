@@ -107,12 +107,12 @@ unsigned char*** node_rx_buffers;
 int circle_count = 0; //Duck tape variable
 int discovery_done = 0; //^^
 
-void create_bitmap_message_1(Node_Creation_Args*, uint32_t, uint32_t, uint32_t, uint32_t*, char*);
+void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32_t index, uint32_t target, uint32_t nodes_found, uint64_t* hop_bitmap, char* message);
 void node_server_create(void* arguments);
 void node_client_create(void* arguments);
 void node_tx(void* arguments);
 void node_rx(void* arguments);
-void continuous_rx(void* args);
+void continuous_rx(void* args, uint64_t* hop_bitmap);
 void set_node_creation_arguments(Node_Creation_Args* node_creation_arguments, int index, int nodes_connected_to, int nodes_in_fabric, int node_index, int port);
 void set_tx_arguments(int is_server, Node_Creation_Args* tx, Node_Tx_Args* tx_args, unsigned char* packet);
 void set_rx_arguments(int is_server, Node_Creation_Args* rx, Node_Rx_Args* rx_args);
@@ -159,11 +159,11 @@ int main()
 
     //Node 4 "server" port
     memset(&node_creation_arguments[N4_N5], 0, sizeof(node_creation_arguments[6]));
-    node_create_function(4, &(node_creation_arguments[N3_N4]), 0x10, 0x28, 0x3E, PORT_4); 
+    node_create_function(4, &(node_creation_arguments[N4_N5]), 0x10, 0x28, 0x3E, PORT_4); 
 
     //Node 4 "client" port
     memset(&node_creation_arguments[N4_N3], 0, sizeof(node_creation_arguments[7]));
-    node_create_function(4, &(node_creation_arguments[N3_N4]), 0x10, 0x28, 0x3E, PORT_3);
+    node_create_function(4, &(node_creation_arguments[N4_N3]), 0x10, 0x28, 0x3E, PORT_3);
 
     //Node 5 "server" port
     memset(&node_creation_arguments[N5_N1], 0, sizeof(node_creation_arguments[8]));
@@ -238,11 +238,15 @@ int main()
         pthread_create(&sim, NULL, continuous_rx, (void*) &(args[node_count]));
     }
 
-    //Temporary code
+    //Temporary code (TESTING)
     char message[PACKET_SIZE];
     memset(message, 0, PACKET_SIZE * sizeof(*message));
-
-    create_bitmap_message_1(node_creation_arguments, N1_N2, 1, 0, 0, message);
+    uint64_t* hop_bitmap;
+    hop_bitmap = malloc(3 * sizeof(*hop_bitmap));
+    hop_bitmap[0] = 0;
+    hop_bitmap[1] = 0;
+    hop_bitmap[2] = 0;
+    create_bitmap_message_1(node_creation_arguments, N1_N2, 1, 0, hop_bitmap, message);
     set_tx_arguments(0, &node_creation_arguments[N1_N2], &tx_arguments, message);
     node_tx(&tx_arguments);
 
@@ -322,13 +326,14 @@ int main()
 }
 
 void node_create_function(int index, Node_Creation_Args* node_args, uint32_t node_index, uint32_t connected_node, uint32_t fabric, int port) {
-    node_args -> index = 1;
+    node_args -> index = index;
     node_args -> nodes_connected_to = connected_node;
     node_args -> nodes_in_fabric = fabric;
     node_args -> node_index = node_index;
     node_args -> port = port;
 }
-void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32_t index, uint32_t target, uint32_t nodes_found, uint32_t* hop_bitmap, char* message)
+
+void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32_t index, uint32_t target, uint32_t nodes_found, uint64_t* hop_bitmap, char* message)
 {
     //NOTE: THE REASON IT IS PUSHED 4 TIMES EACH ELEMENT IS BECAUSE MESSAGE IS A CHAR (8BITS) WHILE TRYING TO STORE A 32 BITS IN EACH INDEX
     message[0] = 0x000000FF & node_creation_arguments[index].node_index; //index of the node 
@@ -351,14 +356,18 @@ void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32
     message[17] = (0x0000FF00 & nodes_found) >> 8;
     message[18] = (0x00FF0000 & nodes_found) >> 16;
     message[19] = (0xFF000000 & nodes_found) >> 24;
-    for (int i = 0; i < 5; i++) {
+    int i = 0;
+    for (i = 0; i < 3; i++) {
         message[20 + (4 * i)] = 0x000000FF & hop_bitmap[i]; //contains the order of the passed nodes 
         message[21 + (4 * i)] = (0x0000FF00 & hop_bitmap[i]) >> 8;
         message[22 + (4 * i)] = (0x00FF0000 & hop_bitmap[i]) >> 16;
         message[23 + (4 * i)] = (0xFF000000 & hop_bitmap[i]) >> 24;
+        message[24 + (4 * i)] = (0xFF00000000 & hop_bitmap[i]) >> 32;
+        message[25 + (4 * i)] = (0xFF0000000000 & hop_bitmap[i]) >> 40;
+        message[26 + (4 * i)] = (0xFF000000000000 & hop_bitmap[i]) >> 48;
+        message[27 + (4 * i)] = (0xFF00000000000000 & hop_bitmap[i]) >> 56;
         //Instead of storing a single hop_bitmap, create an array of 5 hop_bitmaps each element of uint32t 
     }
-
     //TODO: Expand from 5 node hop bit map to 32 node hop bitmap (160 bits) (DONE WITH THE SPACE)
     //TODO: Keep track of which port the discovery message came in on for each node (a trace of ports connected too)
     return;
@@ -531,28 +540,28 @@ void node_rx(void* arguments)
 
     switch(credit_return_priority)
     {
-    case 0x0: break;
-	case 0x1: break;
-	case 0x2: rx_arguments -> curr_socket_credit -> high_priority_credit += 4; break;
-	case 0x3: rx_arguments -> curr_socket_credit -> high_priority_credit += 8; break;
-	case 0x4: rx_arguments -> curr_socket_credit -> low_priority_credit += 4; break;
-	case 0x5: rx_arguments -> curr_socket_credit -> low_priority_credit += 8; break;
-	case 0x6: rx_arguments -> curr_socket_credit -> high_priority_credit += 4; rx_arguments -> curr_socket_credit -> low_priority_credit += 4; break;
-	case 0x7: rx_arguments -> curr_socket_credit -> high_priority_credit += 8; rx_arguments -> curr_socket_credit -> low_priority_credit += 8; break;
-	default: break;
+        case 0x0: break;
+	    case 0x1: break;
+	    case 0x2: rx_arguments -> curr_socket_credit -> high_priority_credit += 4; break;
+	    case 0x3: rx_arguments -> curr_socket_credit -> high_priority_credit += 8; break;
+	    case 0x4: rx_arguments -> curr_socket_credit -> low_priority_credit += 4; break;
+	    case 0x5: rx_arguments -> curr_socket_credit -> low_priority_credit += 8; break;
+	    case 0x6: rx_arguments -> curr_socket_credit -> high_priority_credit += 4; rx_arguments -> curr_socket_credit -> low_priority_credit += 4; break;
+	    case 0x7: rx_arguments -> curr_socket_credit -> high_priority_credit += 8; rx_arguments -> curr_socket_credit -> low_priority_credit += 8; break;
+	    default: break;
     }
 
     switch(credit_return_class)
     {
-    case 0x0: break;
-	case 0x1: break;
-	case 0x2: rx_arguments -> curr_socket_credit -> async_credit += 4; break;
-	case 0x3: rx_arguments -> curr_socket_credit -> async_credit += 8; break;
-	case 0x4: rx_arguments -> curr_socket_credit -> sync_credit += 4; break;
-	case 0x5: rx_arguments -> curr_socket_credit -> sync_credit += 8; break;
-	case 0x6: rx_arguments -> curr_socket_credit -> async_credit += 4; rx_arguments -> curr_socket_credit -> sync_credit += 4; break;
-	case 0x7: rx_arguments -> curr_socket_credit -> async_credit += 8; rx_arguments -> curr_socket_credit -> sync_credit += 8; break;
-	default: break;
+        case 0x0: break;
+	    case 0x1: break;
+	    case 0x2: rx_arguments -> curr_socket_credit -> async_credit += 4; break;
+	    case 0x3: rx_arguments -> curr_socket_credit -> async_credit += 8; break;
+	    case 0x4: rx_arguments -> curr_socket_credit -> sync_credit += 4; break;
+	    case 0x5: rx_arguments -> curr_socket_credit -> sync_credit += 8; break;
+	    case 0x6: rx_arguments -> curr_socket_credit -> async_credit += 4; rx_arguments -> curr_socket_credit -> sync_credit += 4; break;
+	    case 0x7: rx_arguments -> curr_socket_credit -> async_credit += 8; rx_arguments -> curr_socket_credit -> sync_credit += 8; break;
+	    default: break;
     }
 
 
@@ -585,7 +594,16 @@ void node_rx(void* arguments)
     return; 
 }
 
-void continuous_rx(void* args)
+void update_hop_bitmap(int hop_value, int curr_node, uint64_t* hop_bitmap);
+
+void update_hop_bitmap(int hop_value, int curr_node, uint64_t* hop_bitmap) {   
+    //NOTE: THIS IS ASSUMING THE LOWEST NUMBER NODE IS 0 
+    int bitmap_update_index = curr_node / 12;
+    int shift_number = 8 * (curr_node / (bitmap_update_index + 1));
+    hop_bitmap[bitmap_update_index] |= hop_value << shift_number;
+}
+
+void continuous_rx(void* args, uint64_t* hop_bitmap)
     {
         int pointer = 0;
 
@@ -624,6 +642,7 @@ void continuous_rx(void* args)
             int curr_hop_values;
             curr_nodes_found = (rx_arguments -> rx_data.buffer)[16];
             curr_nodes_found |= (rx_arguments -> rx_data.buffer)[17] << 8;
+            //QUESTION: IS CURRENT HOP VALUE JUST HOP BITMAP? 
             curr_hop_values = (rx_arguments -> rx_data.buffer)[20];
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[21] << 8;
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[22] << 16;
@@ -644,12 +663,13 @@ void continuous_rx(void* args)
                         int temp = 0x1F; //So that an integer conversion happens
                         int hop_value = (curr_hop_values >> (loop_control * 5)) & temp; //(5 * (i + 1) - 1:5 * i)
                         hop_value++;
+                        update_hop_bitmap(hop_value, rx_arguments -> node_index, hop_bitmap); 
                         curr_hop_values = curr_hop_values & ~(temp << (loop_control * 5));
                         curr_hop_values = curr_hop_values | (hop_value << (loop_control * 5));
                         printf("%x\n", curr_hop_values);
                     }
                 }
-                curr_nodes_found |= (0x1 << index);
+                curr_nodes_found |= (0x1 << index); //assume this is 
                 (rx_arguments -> rx_data.buffer)[16] = 0xFF & curr_nodes_found;
                 (rx_arguments -> rx_data.buffer)[17] = (0xFF00 & curr_nodes_found) << 8;
                 (rx_arguments -> rx_data.buffer)[20] = 0xFF & curr_hop_values;
