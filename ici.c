@@ -50,18 +50,18 @@
 
 #define RESET_CREDIT 20
 
-#define N1_N2 0
-#define N1_N0 1
-#define N2_N3 2
-#define N2_N1 3
-#define N3_N4 4
-#define N3_N2 5
-#define N4_N5 6
-#define N4_N3 7
-#define N5_N6 8
-#define N5_N4 9
-#define N0_N1 10
-#define N0_N31 11
+#define N0_N1 0
+#define N0_N31 1
+#define N1_N2 2
+#define N1_N0 3
+#define N2_N3 4
+#define N2_N1 5
+#define N3_N4 6
+#define N3_N2 7
+#define N4_N5 8
+#define N4_N3 9
+#define N5_N6 10
+#define N5_N4 11
 #define N6_N7 12
 #define N6_N5 13
 #define N7_N8 14
@@ -151,6 +151,7 @@ typedef struct Small_Flit {
 typedef union Data {
     Small_Flit small_flit;
     unsigned char buffer[PACKET_SIZE];
+    //uint64_t buffer[PACKET_SIZE];
 } Data;
 
 typedef struct Node_Tx_Args {
@@ -210,7 +211,7 @@ int main()
 {
     Node_Creation_Args* node_creation_arguments;
     //Node_Creation_Args* node_identity_information;
-    node_creation_arguments = malloc(63 * sizeof(*node_creation_arguments));
+    node_creation_arguments = malloc(64 * sizeof(*node_creation_arguments));
     //node_identity_information = malloc(5 * sizeof(*node_identity_information));
     pthread_t sim;
 
@@ -219,259 +220,259 @@ int main()
     
     //Node 0 "server" port
     memset(&node_creation_arguments[N0_N1], 0, sizeof(node_creation_arguments[N0_N1]));
-    node_create_function(0, &(node_creation_arguments[N0_N1]), 0x1, 0x80000002, 0x3E, PORT_0);
+    node_create_function(0, &(node_creation_arguments[N0_N1]), 0x1, 0x80000002, 0xFFFFFFFF, PORT_0);
 
     //Node 0 "client" port
     memset(&node_creation_arguments[N0_N31], 0, sizeof(node_creation_arguments[N0_N31]));
-    node_create_function(0, &(node_creation_arguments[N0_N31]), 0x1, 0x80000002, 0x3E, PORT_31);
+    node_create_function(0, &(node_creation_arguments[N0_N31]), 0x1, 0x80000002, 0xFFFFFFFF, PORT_31);
 
     //Node 1 "server" port
     memset(&node_creation_arguments[N1_N2], 0, sizeof(node_creation_arguments[N1_N2]));
-    node_create_function(1, &(node_creation_arguments[N1_N2]), 0x2, 0x5, 0x3E, PORT_1);
+    node_create_function(1, &(node_creation_arguments[N1_N2]), 0x2, 0x5, 0xFFFFFFFF, PORT_1);
 
     //Node 1 "client" port
     memset(&node_creation_arguments[N1_N0], 0, sizeof(node_creation_arguments[N1_N0]));   
-    node_create_function(1, &(node_creation_arguments[N1_N0]), 0x2, 0x5, 0x3E, PORT_0); 
+    node_create_function(1, &(node_creation_arguments[N1_N0]), 0x2, 0x5, 0xFFFFFFFF, PORT_0); 
 
     //Node 2 "server" port
     memset(&node_creation_arguments[N2_N3], 0, sizeof(node_creation_arguments[N2_N3]));
-    node_create_function(2, &(node_creation_arguments[N2_N3]), 0x4, 0xA, 0x3E, PORT_2); 
+    node_create_function(2, &(node_creation_arguments[N2_N3]), 0x4, 0xA, 0xFFFFFFFF, PORT_2); 
 
     //Node 2 "client" port
     memset(&node_creation_arguments[N2_N1], 0, sizeof(node_creation_arguments[N2_N1]));
-    node_create_function(2, &(node_creation_arguments[N2_N1]), 0x4, 0xA, 0x3E, PORT_1); 
+    node_create_function(2, &(node_creation_arguments[N2_N1]), 0x4, 0xA, 0xFFFFFFFF, PORT_1); 
 
     //Node 3 "server" port
     memset(&node_creation_arguments[N3_N4], 0, sizeof(node_creation_arguments[N3_N4]));
-    node_create_function(3, &(node_creation_arguments[N3_N4]), 0x8, 0x14, 0x3E, PORT_3);
+    node_create_function(3, &(node_creation_arguments[N3_N4]), 0x8, 0x14, 0xFFFFFFFF, PORT_3);
 
     //Node 3 "client" port
     memset(&node_creation_arguments[N3_N2], 0, sizeof(node_creation_arguments[N3_N2]));
-    node_create_function(3, &(node_creation_arguments[N3_N2]), 0x8, 0x14, 0x3E, PORT_2); 
+    node_create_function(3, &(node_creation_arguments[N3_N2]), 0x8, 0x14, 0xFFFFFFFF, PORT_2); 
 
     //Node 4 "server" port
     memset(&node_creation_arguments[N4_N5], 0, sizeof(node_creation_arguments[N4_N5]));
-    node_create_function(4, &(node_creation_arguments[N4_N5]), 0x10, 0x28, 0x3E, PORT_4); 
+    node_create_function(4, &(node_creation_arguments[N4_N5]), 0x10, 0x28, 0xFFFFFFFF, PORT_4); 
 
     //Node 4 "client" port
     memset(&node_creation_arguments[N4_N3], 0, sizeof(node_creation_arguments[N4_N3]));
-    node_create_function(4, &(node_creation_arguments[N4_N3]), 0x10, 0x28, 0x3E, PORT_3);
+    node_create_function(4, &(node_creation_arguments[N4_N3]), 0x10, 0x28, 0xFFFFFFFF, PORT_3);
 
     //Node 5 "server" port
     memset(&node_creation_arguments[N5_N6], 0, sizeof(node_creation_arguments[N5_N6]));
-    node_create_function(5, &(node_creation_arguments[N5_N6]), 0x20, 0x50, 0x3E, PORT_5);
+    node_create_function(5, &(node_creation_arguments[N5_N6]), 0x20, 0x50, 0xFFFFFFFF, PORT_5);
 
     //Node 5 "client" port
     memset(&node_creation_arguments[N5_N4], 0, sizeof(node_creation_arguments[N5_N4]));
-    node_create_function(5, &(node_creation_arguments[N5_N4]), 0x20, 0x50, 0x3E, PORT_4);
+    node_create_function(5, &(node_creation_arguments[N5_N4]), 0x20, 0x50, 0xFFFFFFFF, PORT_4);
 
     //Node 6 "server" port
     memset(&node_creation_arguments[N6_N7], 0, sizeof(node_creation_arguments[N6_N7]));
-    node_create_function(6, &(node_creation_arguments[N6_N7]), 0x40, 0xA0, 0x3E, PORT_6);
+    node_create_function(6, &(node_creation_arguments[N6_N7]), 0x40, 0xA0, 0xFFFFFFFF, PORT_6);
 
     //Node 6 "client" port
     memset(&node_creation_arguments[N6_N5], 0, sizeof(node_creation_arguments[N6_N5]));
-    node_create_function(6, &(node_creation_arguments[N6_N5]), 0x40, 0xA0, 0x3E, PORT_5);
+    node_create_function(6, &(node_creation_arguments[N6_N5]), 0x40, 0xA0, 0xFFFFFFFF, PORT_5);
 
     //Node 7 "server" port
     memset(&node_creation_arguments[N7_N8], 0, sizeof(*node_creation_arguments));
-    node_create_function(7, &(node_creation_arguments[N6_N7]), 0x80, 0x140, 0x3E, PORT_7);
+    node_create_function(7, &(node_creation_arguments[N7_N8]), 0x80, 0x140, 0xFFFFFFFF, PORT_7);
 
     //Node 7 "client" port
     memset(&node_creation_arguments[N7_N6], 0, sizeof(*node_creation_arguments));
-    node_create_function(7, &(node_creation_arguments[N7_N6]), 0x80, 0x140, 0x3E, PORT_6);
+    node_create_function(7, &(node_creation_arguments[N7_N6]), 0x80, 0x140, 0xFFFFFFFF, PORT_6);
 
     //Node 8 "server" port
     memset(&node_creation_arguments[N8_N9], 0, sizeof(*node_creation_arguments));
-    node_create_function(8, &(node_creation_arguments[N8_N9]), 0x100, 0x280, 0x3E, PORT_8);
+    node_create_function(8, &(node_creation_arguments[N8_N9]), 0x100, 0x280, 0xFFFFFFFF, PORT_8);
 
     //Node 8 "client" port
     memset(&node_creation_arguments[N8_N7], 0, sizeof(*node_creation_arguments));
-    node_create_function(8, &(node_creation_arguments[N8_N7]), 0x100, 0x280, 0x3E, PORT_7);
+    node_create_function(8, &(node_creation_arguments[N8_N7]), 0x100, 0x280, 0xFFFFFFFF, PORT_7);
 
     //Node 9 "server" port
     memset(&node_creation_arguments[N9_N10], 0, sizeof(*node_creation_arguments));
-    node_create_function(9, &(node_creation_arguments[N9_N10]), 0x200, 0x500, 0x3E, PORT_9);
+    node_create_function(9, &(node_creation_arguments[N9_N10]), 0x200, 0x500, 0xFFFFFFFF, PORT_9);
 
     //Node 9 "client" port
     memset(&node_creation_arguments[N9_N8], 0, sizeof(*node_creation_arguments));
-    node_create_function(9, &(node_creation_arguments[N9_N8]), 0x200, 0x500, 0x3E, PORT_8);
+    node_create_function(9, &(node_creation_arguments[N9_N8]), 0x200, 0x500, 0xFFFFFFFF, PORT_8);
 
     //Node 10 "server" port
     memset(&node_creation_arguments[N10_N11], 0, sizeof(*node_creation_arguments));
-    node_create_function(10, &(node_creation_arguments[N10_N11]), 0x400, 0xA00, 0x3E, PORT_10);
+    node_create_function(10, &(node_creation_arguments[N10_N11]), 0x400, 0xA00, 0xFFFFFFFF, PORT_10);
 
     //Node 10 "client" port
     memset(&node_creation_arguments[N10_N9], 0, sizeof(*node_creation_arguments));
-    node_create_function(10, &(node_creation_arguments[N10_N9]), 0x400, 0xA00, 0x3E, PORT_9);
+    node_create_function(10, &(node_creation_arguments[N10_N9]), 0x400, 0xA00, 0xFFFFFFFF, PORT_9);
 
     //Node 11 "server" port
     memset(&node_creation_arguments[N11_N12], 0, sizeof(*node_creation_arguments));
-    node_create_function(11, &(node_creation_arguments[N11_N12]), 0x800, 0x1400, 0x3E, PORT_11);
+    node_create_function(11, &(node_creation_arguments[N11_N12]), 0x800, 0x1400, 0xFFFFFFFF, PORT_11);
 
     //Node 11 "client" port
     memset(&node_creation_arguments[N11_N10], 0, sizeof(*node_creation_arguments));
-    node_create_function(11, &(node_creation_arguments[N11_N10]), 0x800, 0x1400, 0x3E, PORT_10);
+    node_create_function(11, &(node_creation_arguments[N11_N10]), 0x800, 0x1400, 0xFFFFFFFF, PORT_10);
 
     //Node 12 "server" port
     memset(&node_creation_arguments[N12_N13], 0, sizeof(*node_creation_arguments));
-    node_create_function(12, &(node_creation_arguments[N11_N12]), 0x1000, 0x2800, 0x3E, PORT_12);
+    node_create_function(12, &(node_creation_arguments[N12_N13]), 0x1000, 0x2800, 0xFFFFFFFF, PORT_12);
 
     //Node 12 "client" port
     memset(&node_creation_arguments[N12_N11], 0, sizeof(*node_creation_arguments));
-    node_create_function(12, &(node_creation_arguments[N12_N11]), 0x1000, 0x2800, 0x3E, PORT_11);
+    node_create_function(12, &(node_creation_arguments[N12_N11]), 0x1000, 0x2800, 0xFFFFFFFF, PORT_11);
 
     //Node 13 "server" port
     memset(&node_creation_arguments[N13_N14], 0, sizeof(*node_creation_arguments));
-    node_create_function(13, &(node_creation_arguments[N13_N14]), 0x2000, 0x5000, 0x3E, PORT_13);
+    node_create_function(13, &(node_creation_arguments[N13_N14]), 0x2000, 0x5000, 0xFFFFFFFF, PORT_13);
 
     //Node 13 "client" port
     memset(&node_creation_arguments[N13_N12], 0, sizeof(*node_creation_arguments));
-    node_create_function(13, &(node_creation_arguments[N13_N12]), 0x2000, 0x5000, 0x3E, PORT_12);
+    node_create_function(13, &(node_creation_arguments[N13_N12]), 0x2000, 0x5000, 0xFFFFFFFF, PORT_12);
 
     //Node 14 "server" port
     memset(&node_creation_arguments[N14_N15], 0, sizeof(*node_creation_arguments));
-    node_create_function(14, &(node_creation_arguments[N14_N15]), 0x4000, 0xA000, 0x3E, PORT_14);
+    node_create_function(14, &(node_creation_arguments[N14_N15]), 0x4000, 0xA000, 0xFFFFFFFF, PORT_14);
 
     //Node 14 "client" port
     memset(&node_creation_arguments[N14_N13], 0, sizeof(*node_creation_arguments));
-    node_create_function(14, &(node_creation_arguments[N14_N13]), 0x4000, 0xA000, 0x3E, PORT_13);
+    node_create_function(14, &(node_creation_arguments[N14_N13]), 0x4000, 0xA000, 0xFFFFFFFF, PORT_13);
 
     //Node 15 "server" port
     memset(&node_creation_arguments[N15_N16], 0, sizeof(*node_creation_arguments));
-    node_create_function(15, &(node_creation_arguments[N15_N16]), 0x8000, 0x14000, 0x3E, PORT_15);
+    node_create_function(15, &(node_creation_arguments[N15_N16]), 0x8000, 0x14000, 0xFFFFFFFF, PORT_15);
 
     //Node 15 "client" port
     memset(&node_creation_arguments[N15_N14], 0, sizeof(*node_creation_arguments));
-    node_create_function(15, &(node_creation_arguments[N15_N14]), 0x8000, 0x14000, 0x3E, PORT_14);
+    node_create_function(15, &(node_creation_arguments[N15_N14]), 0x8000, 0x14000, 0xFFFFFFFF, PORT_14);
 
     //Node 16 "server" port
     memset(&node_creation_arguments[N16_N17], 0, sizeof(*node_creation_arguments));
-    node_create_function(16, &(node_creation_arguments[N16_N17]), 0x10000, 0x28000, 0x3E, PORT_16);
+    node_create_function(16, &(node_creation_arguments[N16_N17]), 0x10000, 0x28000, 0xFFFFFFFF, PORT_16);
 
     //Node 16 "client" port
     memset(&node_creation_arguments[N16_N15], 0, sizeof(*node_creation_arguments));
-    node_create_function(16, &(node_creation_arguments[N16_N15]), 0x10000, 0x28000, 0x3E, PORT_15);
+    node_create_function(16, &(node_creation_arguments[N16_N15]), 0x10000, 0x28000, 0xFFFFFFFF, PORT_15);
 
     //Node 17 "server" port
     memset(&node_creation_arguments[N17_N18], 0, sizeof(*node_creation_arguments));
-    node_create_function(17, &(node_creation_arguments[N17_N18]), 0x20000, 0x50000, 0x3E, PORT_17);
+    node_create_function(17, &(node_creation_arguments[N17_N18]), 0x20000, 0x50000, 0xFFFFFFFF, PORT_17);
 
     //Node 17 "client" port
     memset(&node_creation_arguments[N17_N16], 0, sizeof(*node_creation_arguments));
-    node_create_function(17, &(node_creation_arguments[N17_N16]), 0x20000, 0x50000, 0x3E, PORT_16);
+    node_create_function(17, &(node_creation_arguments[N17_N16]), 0x20000, 0x50000, 0xFFFFFFFF, PORT_16);
 
     //Node 18 "server" port
     memset(&node_creation_arguments[N18_N19], 0, sizeof(*node_creation_arguments));
-    node_create_function(18, &(node_creation_arguments[N17_N18]), 0x40000, 0xA0000, 0x3E, PORT_18);
+    node_create_function(18, &(node_creation_arguments[N18_N19]), 0x40000, 0xA0000, 0xFFFFFFFF, PORT_18);
 
     //Node 18 "client" port
     memset(&node_creation_arguments[N18_N17], 0, sizeof(*node_creation_arguments));
-    node_create_function(18, &(node_creation_arguments[N18_N17]), 0x40000, 0xA0000, 0x3E, PORT_17);
+    node_create_function(18, &(node_creation_arguments[N18_N17]), 0x40000, 0xA0000, 0xFFFFFFFF, PORT_17);
 
     //Node 19 "server" port
     memset(&node_creation_arguments[N19_N20], 0, sizeof(*node_creation_arguments));
-    node_create_function(19, &(node_creation_arguments[N19_N20]), 0x80000, 0x140000, 0x3E, PORT_19);
+    node_create_function(19, &(node_creation_arguments[N19_N20]), 0x80000, 0x140000, 0xFFFFFFFF, PORT_19);
 
     //Node 19 "client" port
     memset(&node_creation_arguments[N19_N18], 0, sizeof(*node_creation_arguments));
-    node_create_function(19, &(node_creation_arguments[N19_N18]), 0x80000, 0x140000, 0x3E, PORT_18);
+    node_create_function(19, &(node_creation_arguments[N19_N18]), 0x80000, 0x140000, 0xFFFFFFFF, PORT_18);
 
     //Node 20 "server" port
     memset(&node_creation_arguments[N20_N21], 0, sizeof(*node_creation_arguments));
-    node_create_function(20, &(node_creation_arguments[N20_N21]), 0x100000, 0x280000, 0x3E, PORT_20);
+    node_create_function(20, &(node_creation_arguments[N20_N21]), 0x100000, 0x280000, 0xFFFFFFFF, PORT_20);
 
     //Node 20 "client" port
     memset(&node_creation_arguments[N20_N19], 0, sizeof(*node_creation_arguments));
-    node_create_function(20, &(node_creation_arguments[N20_N19]), 0x100000, 0x280000, 0x3E, PORT_19);
+    node_create_function(20, &(node_creation_arguments[N20_N19]), 0x100000, 0x280000, 0xFFFFFFFF, PORT_19);
 
     //Node 21 "server" port
     memset(&node_creation_arguments[N21_N22], 0, sizeof(*node_creation_arguments));
-    node_create_function(21, &(node_creation_arguments[N21_N22]), 0x200000, 0x500000, 0x3E, PORT_21);
+    node_create_function(21, &(node_creation_arguments[N21_N22]), 0x200000, 0x500000, 0xFFFFFFFF, PORT_21);
 
     //Node 21 "client" port
     memset(&node_creation_arguments[N21_N20], 0, sizeof(*node_creation_arguments));
-    node_create_function(21, &(node_creation_arguments[N21_N20]), 0x200000, 0x500000, 0x3E, PORT_20);
+    node_create_function(21, &(node_creation_arguments[N21_N20]), 0x200000, 0x500000, 0xFFFFFFFF, PORT_20);
 
     //Node 22 "server" port
     memset(&node_creation_arguments[N22_N23], 0, sizeof(*node_creation_arguments));
-    node_create_function(22, &(node_creation_arguments[N22_N23]), 0x400000, 0xA00000, 0x3E, PORT_22);
+    node_create_function(22, &(node_creation_arguments[N22_N23]), 0x400000, 0xA00000, 0xFFFFFFFF, PORT_22);
 
     //Node 22 "client" port
     memset(&node_creation_arguments[N22_N21], 0, sizeof(*node_creation_arguments));
-    node_create_function(22, &(node_creation_arguments[N22_N21]), 0x400000, 0xA00000, 0x3E, PORT_21);
+    node_create_function(22, &(node_creation_arguments[N22_N21]), 0x400000, 0xA00000, 0xFFFFFFFF, PORT_21);
 
     //Node 23 "server" port
     memset(&node_creation_arguments[N23_N24], 0, sizeof(*node_creation_arguments));
-    node_create_function(23, &(node_creation_arguments[N23_N24]), 0x800000, 0x1400000, 0x3E, PORT_23);
+    node_create_function(23, &(node_creation_arguments[N23_N24]), 0x800000, 0x1400000, 0xFFFFFFFF, PORT_23);
 
     //Node 23 "client" port
     memset(&node_creation_arguments[N23_N22], 0, sizeof(*node_creation_arguments));
-    node_create_function(23, &(node_creation_arguments[N23_N22]), 0x800000, 0x1400000, 0x3E, PORT_22);
+    node_create_function(23, &(node_creation_arguments[N23_N22]), 0x800000, 0x1400000, 0xFFFFFFFF, PORT_22);
 
     //Node 24 "server" port
     memset(&node_creation_arguments[N24_N25], 0, sizeof(*node_creation_arguments));
-    node_create_function(24, &(node_creation_arguments[N24_N25]), 0x1000000, 0x2800000, 0x3E, PORT_24);
+    node_create_function(24, &(node_creation_arguments[N24_N25]), 0x1000000, 0x2800000, 0xFFFFFFFF, PORT_24);
 
     //Node 24 "client" port
     memset(&node_creation_arguments[N24_N23], 0, sizeof(*node_creation_arguments));
-    node_create_function(24, &(node_creation_arguments[N24_N23]), 0x1000000, 0x2800000, 0x3E, PORT_23);
+    node_create_function(24, &(node_creation_arguments[N24_N23]), 0x1000000, 0x2800000, 0xFFFFFFFF, PORT_23);
 
     //Node 25 "server" port
     memset(&node_creation_arguments[N25_N26], 0, sizeof(*node_creation_arguments));
-    node_create_function(25, &(node_creation_arguments[N25_N26]), 0x2000000, 0x5000000, 0x3E, PORT_25);
+    node_create_function(25, &(node_creation_arguments[N25_N26]), 0x2000000, 0x5000000, 0xFFFFFFFF, PORT_25);
 
     //Node 25 "client" port
     memset(&node_creation_arguments[N25_N24], 0, sizeof(*node_creation_arguments));
-    node_create_function(25, &(node_creation_arguments[N25_N24]), 0x2000000, 0x5000000, 0x3E, PORT_24);
+    node_create_function(25, &(node_creation_arguments[N25_N24]), 0x2000000, 0x5000000, 0xFFFFFFFF, PORT_24);
 
     //Node 26 "server" port
     memset(&node_creation_arguments[N26_N27], 0, sizeof(*node_creation_arguments));
-    node_create_function(26, &(node_creation_arguments[N26_N27]), 0x4000000, 0xA000000, 0x3E, PORT_26);
+    node_create_function(26, &(node_creation_arguments[N26_N27]), 0x4000000, 0xA000000, 0xFFFFFFFF, PORT_26);
 
     //Node 26 "client" port
     memset(&node_creation_arguments[N26_N25], 0, sizeof(*node_creation_arguments));
-    node_create_function(26, &(node_creation_arguments[N26_N25]), 0x4000000, 0xA000000, 0x3E, PORT_25);
+    node_create_function(26, &(node_creation_arguments[N26_N25]), 0x4000000, 0xA000000, 0xFFFFFFFF, PORT_25);
 
     //Node 27 "server" port
     memset(&node_creation_arguments[N27_N28], 0, sizeof(*node_creation_arguments));
-    node_create_function(27, &(node_creation_arguments[N27_N28]), 0x8000000, 0x14000000, 0x3E, PORT_27);
+    node_create_function(27, &(node_creation_arguments[N27_N28]), 0x8000000, 0x14000000, 0xFFFFFFFF, PORT_27);
 
     //Node 27 "client" port
     memset(&node_creation_arguments[N27_N26], 0, sizeof(*node_creation_arguments));
-    node_create_function(27, &(node_creation_arguments[N27_N26]), 0x8000000, 0x14000000, 0x3E, PORT_26);
+    node_create_function(27, &(node_creation_arguments[N27_N26]), 0x8000000, 0x14000000, 0xFFFFFFFF, PORT_26);
 
     //Node 28 "server" port
     memset(&node_creation_arguments[N28_N29], 0, sizeof(*node_creation_arguments));
-    node_create_function(28, &(node_creation_arguments[N28_N29]), 0x10000000, 0x28000000, 0x3E, PORT_28);
+    node_create_function(28, &(node_creation_arguments[N28_N29]), 0x10000000, 0x28000000, 0xFFFFFFFF, PORT_28);
 
     //Node 28 "client" port
     memset(&node_creation_arguments[N28_N27], 0, sizeof(*node_creation_arguments));
-    node_create_function(28, &(node_creation_arguments[N28_N27]), 0x10000000, 0x28000000, 0x3E, PORT_27);
+    node_create_function(28, &(node_creation_arguments[N28_N27]), 0x10000000, 0x28000000, 0xFFFFFFFF, PORT_27);
 
     //Node 29 "server" port
     memset(&node_creation_arguments[N29_N30], 0, sizeof(*node_creation_arguments));
-    node_create_function(29, &(node_creation_arguments[N29_N30]), 0x20000000, 0x50000000, 0x3E, PORT_29);
+    node_create_function(29, &(node_creation_arguments[N29_N30]), 0x20000000, 0x50000000, 0xFFFFFFFF, PORT_29);
 
     //Node 29 "client" port
     memset(&node_creation_arguments[N29_N28], 0, sizeof(*node_creation_arguments));
-    node_create_function(29, &(node_creation_arguments[N29_N28]), 0x20000000, 0x50000000, 0x3E, PORT_28);
+    node_create_function(29, &(node_creation_arguments[N29_N28]), 0x20000000, 0x50000000, 0xFFFFFFFF, PORT_28);
 
     //Node 30 "server" port
     memset(&node_creation_arguments[N30_N31], 0, sizeof(*node_creation_arguments));
-    node_create_function(30, &(node_creation_arguments[N30_N31]), 0x40000000, 0xA0000000, 0x3E, PORT_30);
+    node_create_function(30, &(node_creation_arguments[N30_N31]), 0x40000000, 0xA0000000, 0xFFFFFFFF, PORT_30);
 
     //Node 30 "client" port
     memset(&node_creation_arguments[N30_N29], 0, sizeof(*node_creation_arguments));
-    node_create_function(30, &(node_creation_arguments[N30_N29]), 0x40000000, 0xA0000000, 0x3E, PORT_29);
+    node_create_function(30, &(node_creation_arguments[N30_N29]), 0x40000000, 0xA0000000, 0xFFFFFFFF, PORT_29);
 
     //Node 31 "server" port
     memset(&node_creation_arguments[N31_N0], 0, sizeof(*node_creation_arguments));
-    node_create_function(31, &(node_creation_arguments[N31_N0]), 0x80000000, 0x40000001, 0x3E, PORT_31);
+    node_create_function(31, &(node_creation_arguments[N31_N0]), 0x80000000, 0x40000001, 0xFFFFFFFF, PORT_31);
 
     //Node 31 "client" port
     memset(&node_creation_arguments[N31_N30], 0, sizeof(*node_creation_arguments));
-    node_create_function(31, &(node_creation_arguments[N31_N30]), 0x80000000, 0x40000001, 0x3E, PORT_30);
+    node_create_function(31, &(node_creation_arguments[N31_N30]), 0x80000000, 0x40000001, 0xFFFFFFFF, PORT_30);
 
     //Node 0 to Node 1
     node_server_create((void*) &node_creation_arguments[N0_N1]); //Node 0 "server" port
@@ -482,16 +483,16 @@ int main()
     node_client_create((void*) &node_creation_arguments[N2_N1]); //Node 2 "client" port
 
     //Node 2 to Node 3
-    node_server_create((void*) &node_creation_arguments[2]); //Node 2 "server" port
-    node_client_create((void*) &node_creation_arguments[5]); //Node 3 "client" port
+    node_server_create((void*) &node_creation_arguments[N2_N3]); //Node 2 "server" port
+    node_client_create((void*) &node_creation_arguments[N3_N2]); //Node 3 "client" port
    
     //Node 3 to Node 4
-    node_server_create((void*) &node_creation_arguments[4]); //Node 3 "server" port
-    node_client_create((void*) &node_creation_arguments[7]); //Node 4 "client" port
+    node_server_create((void*) &node_creation_arguments[N3_N4]); //Node 3 "server" port
+    node_client_create((void*) &node_creation_arguments[N4_N3]); //Node 4 "client" port
 
     //Node 4 to Node 5
-    node_server_create((void*) &node_creation_arguments[6]); //Node 4 "server" port
-    node_client_create((void*) &node_creation_arguments[9]); //Node 5 "client" port
+    node_server_create((void*) &node_creation_arguments[N4_N5]); //Node 4 "server" port
+    node_client_create((void*) &node_creation_arguments[N5_N4]); //Node 5 "client" port
 
     //Node 5 to Node 6
     node_server_create((void*) &node_creation_arguments[N5_N6]); //Node 5 "server" port
@@ -625,10 +626,10 @@ int main()
     fabric_init(&node_creation_arguments);
 
     Continuous_Rx_Args* args;
-    args = malloc(10 * sizeof(*args));
+    args = malloc(64 * sizeof(*args));
 
     int node_count;
-    for (node_count = 0; node_count <= 8; node_count += 2)
+    for (node_count = 0; node_count <= 62; node_count += 2)
     {
         memset(&(rx_arguments[node_count]), 0, sizeof(rx_arguments[node_count]));
         set_rx_arguments(1, &node_creation_arguments[node_count], &(rx_arguments[node_count]));
@@ -637,7 +638,7 @@ int main()
         pthread_create(&sim, NULL, continuous_rx, (void*) &(args[node_count]));
     }
 
-    for (node_count = 1; node_count <= 9; node_count += 2)
+    for (node_count = 1; node_count <= 63; node_count += 2)
     {
         memset(&(rx_arguments[node_count]), 0, sizeof(rx_arguments[node_count]));
         set_rx_arguments(0, &node_creation_arguments[node_count], &(rx_arguments[node_count]));
@@ -713,10 +714,10 @@ int main()
 
     pthread_exit(NULL);
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 64; i++)
         close(node_creation_arguments[i].sock_fd); 
     
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 32; i++)
     {
         for (j = 0; j < NUM_BUFFER_SLOTS; j++)
         {
@@ -739,6 +740,7 @@ void node_create_function(int index, Node_Creation_Args* node_args, uint32_t nod
     node_args -> nodes_in_fabric = fabric;
     node_args -> node_index = node_index;
     node_args -> port = port;
+    printf("Index %d has node index of %x\n", node_args -> index, node_args -> node_index);
 }
 
 void create_bitmap_message_1(Node_Creation_Args* node_creation_arguments, uint32_t index, uint32_t target, uint32_t nodes_found, uint64_t* hop_bitmap, char* message)
@@ -930,7 +932,7 @@ void node_rx(void* arguments)
     Node_Rx_Args* rx_arguments = arguments;
 
     len = sizeof(rx_arguments -> network_addr);
-
+    printf("node index %x\n", rx_arguments -> node_index);
     while (n == -1)
     {
         n = recvfrom(rx_arguments -> sock_fd, rx_arguments -> rx_data.buffer, PACKET_SIZE, MSG_WAITALL, (struct sockaddr *) &(rx_arguments -> network_addr), &len);
@@ -1039,6 +1041,8 @@ void update_hop_bitmap(int curr_node, uint64_t* hop_bitmap) {
 
 }
 
+//void forward_message(int index, Node_Creation_Args* temp_node_creation_arguments, Node_Creation_Args* node_creation_arguments, Node_Rx_Args* rx_arguments, Node_Tx_Args tx_arguments);
+
 void continuous_rx(void* args)
     {
         int pointer = 0;
@@ -1078,21 +1082,21 @@ void continuous_rx(void* args)
             //int curr_hop_values;
             curr_nodes_found = (rx_arguments -> rx_data.buffer)[16];
             curr_nodes_found |= (rx_arguments -> rx_data.buffer)[17] << 8;
-            //QUESTION: IS CURRENT HOP VALUE JUST HOP BITMAP? 
+
             /*
             curr_hop_values = (rx_arguments -> )rx_data.buffer[20];
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[21] << 8;
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[22] << 16;
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[23] << 24;*/
             for (i = 0; i < 3; i++) {
-                hop_bitmap[i] = (rx_arguments -> rx_data.buffer)[20 + (8 * i)];
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[21 + (8 * i)] << 8;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[22 + (8 * i)] << 16;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[23 + (8 * i)] << 24;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[24 + (8 * i)] << 32;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[25 + (8 * i)] << 40;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[26 + (8 * i)] << 48;
-                hop_bitmap[i] |= (rx_arguments -> rx_data.buffer)[27 + (8 * i)] << 56;
+                hop_bitmap[i] = (uint64_t)(rx_arguments -> rx_data.buffer)[20 + (8 * i)];
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[21 + (8 * i)] << 8;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[22 + (8 * i)] << 16;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[23 + (8 * i)] << 24;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[24 + (8 * i)] << 32;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[25 + (8 * i)] << 40;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[26 + (8 * i)] << 48;
+                hop_bitmap[i] |= (uint64_t)(rx_arguments -> rx_data.buffer)[27 + (8 * i)] << 56;
             }
         
             if ((curr_nodes_found >> index) & 0x1) 
@@ -1146,24 +1150,40 @@ void continuous_rx(void* args)
                 //To set next destination of message
                 switch (index)
                 {
-                case 1:
-                    if ((dest == 5) | (dest == 4) & 0)
+                case 0:
+                    if ((dest == 31) | (dest == 30) & 0)
                     {
-                        //Node 1 "client" port
+                        //Node 0 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
-                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N5]), sizeof(node_creation_arguments[N1_N5]));
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N0_N31]), sizeof(*node_creation_arguments));
                         set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
                     }
                     else
                     {
-                        //Node 1 "server" port
+                        //Node 0 "server" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
-                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N2]), sizeof(node_creation_arguments[N1_N2]));
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N0_N1]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 1:
+                    if ((dest == 31) | (dest == 0) & 0)
+                    {
+                        //Node 0 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N0]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 0 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N1_N2]), sizeof(*node_creation_arguments));
                         set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
                     }
                     break;
                 case 2:
-                    if (((dest == 1) | (dest == 5)) & 0)
+                    if (((dest == 1) | (dest == 0)) & 0)
                     {
                         //Node 2 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 2, 0, 0, 0, PORT_1);
@@ -1213,20 +1233,439 @@ void continuous_rx(void* args)
                 case 5:
                     if (((dest == 4) | (dest == 3)) & 0)
                     {
-                        //Node 2 "client" port
+                        //Node 5 "client" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 5, 0, 0, 0, PORT_4);
                         memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N5_N4]), sizeof(node_creation_arguments[N5_N4]));
                         set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
                     }
                     else
                     {
-                        //Node 2 "server" port
+                        //Node 5 "server" port
                         //set_node_creation_arguments(&temp_node_creation_arguments, 5, 0, 0, 0, PORT_5);
-                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N5_N1]), sizeof(node_creation_arguments[N5_N1]));
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N5_N6]), sizeof(node_creation_arguments[N5_N6]));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 6:
+                    if ((dest == 5) | (dest == 4) & 0)
+                    {
+                        //Node 6 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N6_N5]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 6 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N6_N7]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 7:
+                    if ((dest == 5) | (dest == 6) & 0)
+                    {
+                        //Node 7 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N7_N6]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 7 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N7_N8]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 8:
+                    if ((dest == 6) | (dest == 7) & 0)
+                    {
+                        //Node 6 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N8_N7]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 6 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N8_N9]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+
+                case 9:
+                    if ((dest == 8) | (dest == 7) & 0)
+                    {
+                        //Node 9 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N9_N8]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 9 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N9_N10]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 10:
+                    if ((dest == 9) | (dest == 8) & 0)
+                    {
+                        //Node 10 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N10_N9]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 10 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N10_N11]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 11:
+                    if ((dest == 9) | (dest == 10) & 0)
+                    {
+                        //Node 11 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N11_N10]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 11 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N11_N12]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 12:
+                    if ((dest == 10) | (dest == 11) & 0)
+                    {
+                        //Node 12 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N11_N10]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 12 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N12_N13]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 13:
+                    if ((dest == 12) | (dest == 11) & 0)
+                    {
+                        //Node 13 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N13_N12]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 12 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N13_N14]), sizeof(*node_creation_arguments));
                         set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
                     }
                     break;
                 
+                case 14:
+                    if ((dest == 13) | (dest == 12) & 0)
+                    {
+                        //Node 14 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N14_N13]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 14 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N14_N15]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+
+                case 15:
+                    if ((dest == 14) | (dest == 13) & 0)
+                    {
+                        //Node 15 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N15_N14]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 15 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N15_N16]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+
+                case 16:
+                    if ((dest == 14) | (dest == 15) & 0)
+                    {
+                        //Node 16 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N16_N15]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 16 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N16_N17]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 17:
+                    if ((dest == 16) | (dest == 15) & 0)
+                    {
+                        //Node 17 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N17_N16]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 17 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N17_N18]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 18:
+                    if ((dest == 16) | (dest == 17) & 0)
+                    {
+                        //Node 18 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N18_N17]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 18 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N18_N19]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 19:
+                    if ((dest == 18) | (dest == 17) & 0)
+                    {
+                        //Node 19 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N19_N18]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 19 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N19_N20]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 20:
+                    if ((dest == 18) | (dest == 19) & 0)
+                    {
+                        //Node 20 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N20_N19]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 20 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N20_N21]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 21:
+                    if ((dest == 20) | (dest == 19) & 0)
+                    {
+                        //Node 21 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N21_N20]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 21 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N21_N22]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 22:
+                    if ((dest == 20) | (dest == 21) & 0)
+                    {
+                        //Node 22 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N22_N21]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 22 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N22_N23]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 23:
+                    if ((dest == 22) | (dest == 21) & 0)
+                    {
+                        //Node 23 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N23_N22]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 23 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N23_N24]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 24:
+                    if ((dest == 23) | (dest == 22) & 0)
+                    {
+                        //Node 24 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N24_N23]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 24 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N24_N25]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 25:
+                    if ((dest == 23) | (dest == 24) & 0)
+                    {
+                        //Node 24 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N25_N24]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 24 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N25_N26]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 26:
+                    if ((dest == 25) | (dest == 24) & 0)
+                    {
+                        //Node 26 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N26_N25]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 26 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N26_N27]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 27:
+                    if ((dest == 25) | (dest == 26) & 0)
+                    {
+                        //Node 27 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N27_N26]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 27 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N27_N28]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 28:
+                    if ((dest == 27) | (dest == 26) & 0)
+                    {
+                        //Node 28 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N28_N27]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 28 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N28_N29]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 29:
+                    if ((dest == 27) | (dest == 28) & 0)
+                    {
+                        //Node 29 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N29_N28]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 29 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N29_N30]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 30:
+                    if ((dest == 29) | (dest == 28) & 0)
+                    {
+                        //Node 30 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N30_N29]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 30 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N30_N31]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
+                case 31:
+                    if ((dest == 29) | (dest == 30) & 0)
+                    {
+                        //Node 31 "client" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_5);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N31_N30]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(0, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    else
+                    {
+                        //Node 31 "server" port
+                        //set_node_creation_arguments(&temp_node_creation_arguments, 1, 0, 0, 0, PORT_1);
+                        memcpy(&temp_node_creation_arguments, &(node_creation_arguments[N31_N0]), sizeof(*node_creation_arguments));
+                        set_tx_arguments(1, &temp_node_creation_arguments, &tx_arguments, rx_arguments -> rx_data.buffer);
+                    }
+                    break;
                 default:
                     printf("AN ERROR HAS OCCURRED IN FORWARDING!\n");
                     break;
@@ -1317,7 +1756,7 @@ void fabric_init(Node_Creation_Args** nodes)
     server_index = 0;
     client_index = 3;
 
-    while(server_index <= 8)
+    while(server_index <= 62)
     {
         (*nodes)[client_index].socket_credit.high_priority_credit = RESET_CREDIT;
         (*nodes)[client_index].socket_credit.low_priority_credit = RESET_CREDIT;
@@ -1341,7 +1780,7 @@ void fabric_init(Node_Creation_Args** nodes)
 
         //Index Update Code
         server_index += 2;
-        client_index = client_index == 9 ? 1 : client_index + 2;
+        client_index = client_index == 63 ? 1 : client_index + 2;
     }
 
     return;
@@ -1353,7 +1792,7 @@ unsigned char bit_read_index(unsigned char num, char index)
 
     if(index >= 8)
     {
-        return(NULL);
+        return 0;
     }
 
     result = num >> index;
