@@ -620,7 +620,7 @@ int main()
     Node_Rx_Args* rx_arguments;
     memset(&tx_arguments, 0, sizeof(tx_arguments));
     //memset(&rx_arguments, 0, sizeof(rx_arguments));
-    rx_arguments = malloc(10 * sizeof(*rx_arguments));
+    rx_arguments = malloc(64 * sizeof(*rx_arguments));
 
     //Initialize the Ring of Nodes
     fabric_init(&node_creation_arguments);
@@ -932,7 +932,6 @@ void node_rx(void* arguments)
     Node_Rx_Args* rx_arguments = arguments;
 
     len = sizeof(rx_arguments -> network_addr);
-    printf("node index %x\n", rx_arguments -> node_index);
     while (n == -1)
     {
         n = recvfrom(rx_arguments -> sock_fd, rx_arguments -> rx_data.buffer, PACKET_SIZE, MSG_WAITALL, (struct sockaddr *) &(rx_arguments -> network_addr), &len);
@@ -1062,7 +1061,10 @@ void continuous_rx(void* args)
             node_rx(rx_arguments);
             for (i = 0; i < PACKET_SIZE; i++)
             {
-                int temp = log10(rx_arguments -> node_index) / log10(2) - 1;
+                int temp = rx_arguments -> index - 1;
+                if (temp == -1) {
+                    temp = 31; 
+                }
                 //node_rx_buffers[temp][pointer][i] = rx_arguments -> rx_data.buffer[i];
                 memcpy(&(node_rx_buffers[temp][pointer][i]), &(rx_arguments -> rx_data.buffer[i]), sizeof(rx_arguments -> rx_data.buffer[i]));
             }
@@ -1074,15 +1076,16 @@ void continuous_rx(void* args)
             //ASSUMPTION: using a ring configuration, so do not need to worry about sequence number because each hop value is unique i.e. no two hop values will be the same
             //Now set found bit for current node
             //To create a forwarding message if this is not the destination node
-            int dest = rx_arguments -> rx_data.buffer[FLIT_TARGET_0 / (sizeof(char) * 8)] & 0x1F;
-            int index = log10(rx_arguments -> node_index) / log10(2);
+            int dest = rx_arguments -> rx_data.buffer[FLIT_TARGET_0 / (sizeof(char) * 8)] & 0x1F; //0xFFFFFFFF
+            int index = rx_arguments -> index;
             circle_count = index == 1 ? circle_count + 1 : circle_count; //TEMP
 
             int curr_nodes_found;
             //int curr_hop_values;
             curr_nodes_found = (rx_arguments -> rx_data.buffer)[16];
             curr_nodes_found |= (rx_arguments -> rx_data.buffer)[17] << 8;
-
+            curr_nodes_found |= (rx_arguments -> rx_data.buffer)[18] << 16;
+            curr_nodes_found |= (rx_arguments -> rx_data.buffer)[19] << 24;
             /*
             curr_hop_values = (rx_arguments -> )rx_data.buffer[20];
             curr_hop_values |= (rx_arguments -> rx_data.buffer)[21] << 8;
@@ -1107,7 +1110,7 @@ void continuous_rx(void* args)
             {
                 int loop_control;
                 //CHANGE FROM 1 to 5 -> 0 to 32
-                update_hop_bitmap(rx_arguments -> node_index, hop_bitmap);
+                update_hop_bitmap(rx_arguments -> index, hop_bitmap);
                 /*for (loop_control = 0; loop_control < 5; loop_control++)
                 {   
                     
@@ -1143,10 +1146,9 @@ void continuous_rx(void* args)
                     (rx_arguments -> rx_data.buffer)[27 + (8 * i)] = (0xFF00000000000000 & hop_bitmap[i]) >> 56;
                 }
             }
-
             if (dest != index | !discovery_done) //(circle_count < 2)
             {
-                printf("Forwarding Message at Node %d\n", index);
+                printf("Forwarding Message at Node %d and current node is %x\n", index, curr_nodes_found);
                 //To set next destination of message
                 switch (index)
                 {
